@@ -1,1 +1,1 @@
-# Nuxt Minimal Template
+# movie-match-frontend
