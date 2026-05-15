@@ -3,6 +3,9 @@ import prettierPlugin from 'eslint-plugin-prettier'
 import withNuxt from './.nuxt/eslint.config.mjs'
 
 export default withNuxt(
+  {
+    ignores: ['.agents/**'],
+  },
   unocss,
   {
     plugins: {
