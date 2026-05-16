@@ -1,0 +1,52 @@
+:root,
+.theme-dark {
+  --color-background: #0b0e14;
+  --color-foreground: #f3e8d6;
+  --color-heading: #f6eddf;
+  --color-body: #c9beb0;
+  --color-primary: #e7b66d;
+  --color-primary-foreground: #0b0e14;
+  --color-secondary: #1b202b;
+  --color-secondary-foreground: #f3e8d6;
+  --color-accent: #91b7a3;
+  --color-accent-foreground: #0b0e14;
+  --color-muted: #161a23;
+  --color-muted-foreground: #b7afa4;
+  --color-border: #2d2630;
+  --color-ring: #e7b66d;
+  --color-card: #10141c;
+  --color-card-foreground: #f3e8d6;
+  --color-button: var(--color-primary);
+  --color-button-foreground: var(--color-primary-foreground);
+}
+
+.theme-light {
+  --color-background: #f6efe4;
+  --color-foreground: #18151a;
+  --color-heading: #111016;
+  --color-body: #403a37;
+  --color-primary: #8d4637;
+  --color-primary-foreground: #fff7ed;
+  --color-secondary: #e9ddcf;
+  --color-secondary-foreground: #18151a;
+  --color-accent: #5f826f;
+  --color-accent-foreground: #fff7ed;
+  --color-muted: #ede3d8;
+  --color-muted-foreground: #6b625d;
+  --color-border: #d8cabc;
+  --color-ring: #8d4637;
+  --color-card: #fbf2e7;
+  --color-card-foreground: #18151a;
+  --color-button: var(--color-primary);
+  --color-button-foreground: var(--color-primary-foreground);
+}
+
+html {
+  background: var(--color-background);
+}
+
+body {
+  min-width: 320px;
+  background: var(--color-background);
+  color: var(--color-body);
+}
