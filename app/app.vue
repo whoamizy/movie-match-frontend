@@ -6,7 +6,7 @@
           Movie Match
         </h1>
 
-        <UiButton @click="alertMessage"> начать </UiButton>
+        <UiButton @click="alertMessage">Начать</UiButton>
       </div>
     </section>
   </main>
