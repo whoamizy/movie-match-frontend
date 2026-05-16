@@ -27,39 +27,61 @@
             Ссылка приглашения
           </span>
           <div
-            class="p-3 border border-border rounded-md bg-muted flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            class="p-3 border border-border rounded-md bg-muted flex flex-col gap-3 min-w-0 sm:flex-row sm:items-center sm:justify-between"
           >
-            <span class="text-sm text-foreground break-all">
+            <span class="text-sm text-foreground min-w-0 truncate">
               {{ inviteLink }}
             </span>
-            <button
+            <UiButton
               type="button"
-              class="text-primary border border-border rounded-md bg-card inline-flex shrink-0 size-10 transition-colors items-center justify-center focus-visible:outline-none hover:border-primary/50 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring"
+              class="shrink-0 gap-2 w-full sm:w-auto"
               :aria-label="copyButtonLabel"
               :title="copyButtonLabel"
               @click="copyInviteLink"
             >
-              <UiIcon name="copy" size="18" data-icon />
-            </button>
+              <UiIcon
+                :name="copyButtonIcon"
+                size="18"
+                data-icon="inline-start"
+              />
+              <span>{{ copyButtonLabel }}</span>
+            </UiButton>
           </div>
           <p
             v-if="copyMessage"
-            class="text-xs"
-            :class="
-              copyState === 'error' ? 'text-primary' : 'text-muted-foreground'
-            "
-            aria-live="polite"
+            class="text-xs text-primary px-3 py-2 border border-primary/35 rounded-md bg-primary/10"
+            role="alert"
           >
             {{ copyMessage }}
           </p>
+        </div>
+
+        <div
+          v-else-if="!isInviteLinkLoaded"
+          class="p-4 border border-border rounded-md bg-secondary/55 flex flex-col gap-3"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <span
+            class="text-xs text-muted-foreground tracking-[0.16em] uppercase"
+          >
+            Ссылка приглашения
+          </span>
+          <div
+            class="p-3 border border-border rounded-md bg-muted flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div class="rounded-md bg-border/70 h-5 w-full animate-pulse" />
+            <div
+              class="rounded-md bg-border/70 h-10 w-full animate-pulse sm:w-44"
+            />
+          </div>
         </div>
 
         <p
           v-else
           class="text-sm text-muted-foreground px-4 py-3 border border-border rounded-md bg-secondary/55"
         >
-          Ссылка приглашения появится здесь после создания комнаты из этой
-          вкладки.
+          Ссылка приглашения пока недоступна для этой комнаты.
         </p>
       </div>
     </section>
@@ -75,6 +97,7 @@ const activeSession = computed(() =>
   session.value?.sessionId === sessionId.value ? session.value : null,
 )
 const storedInviteLink = ref<string | null>(null)
+const isInviteLinkLoaded = ref(false)
 const copyState = ref<'idle' | 'copied' | 'error'>('idle')
 let copyResetTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -82,15 +105,12 @@ const inviteLink = computed(
   () => activeSession.value?.inviteLink ?? storedInviteLink.value,
 )
 const copyButtonLabel = computed(() =>
-  copyState.value === 'copied'
-    ? 'Скопировано'
-    : 'Скопировать ссылку приглашения',
+  copyState.value === 'copied' ? 'Ссылка скопирована' : 'Скопировать ссылку',
+)
+const copyButtonIcon = computed(() =>
+  copyState.value === 'copied' ? 'check' : 'copy',
 )
 const copyMessage = computed(() => {
-  if (copyState.value === 'copied') {
-    return 'Ссылка скопирована.'
-  }
-
   if (copyState.value === 'error') {
     return 'Не удалось скопировать ссылку. Выдели её вручную.'
   }
@@ -100,6 +120,7 @@ const copyMessage = computed(() => {
 
 const loadStoredInviteLink = () => {
   storedInviteLink.value = getStoredInviteLink(sessionId.value)
+  isInviteLinkLoaded.value = true
 }
 
 const resetCopyStateLater = () => {
@@ -167,6 +188,7 @@ watch(
 )
 
 watch(sessionId, () => {
+  isInviteLinkLoaded.value = false
   loadStoredInviteLink()
 })
 
