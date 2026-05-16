@@ -35,7 +35,6 @@ Before finishing a task, run `npm run lint`; for changes in config, dependencies
 ## Layout workflow
 
 - When a task involves building, restyling, or polishing a page or component, use the `frontend-design` skill first.
-- Before using that skill, check the local instructions in `.agents/skills/` and follow the relevant skill file if one exists.
 - Treat that skill as the default guide for visual direction, composition, typography, motion, spacing, and overall polish.
 - Reuse existing project conventions and design tokens where possible, but do not fall back to generic or bland UI patterns.
 - If the user asks for a specific visual style or product feel, keep that intent consistent across the implementation.
@@ -43,7 +42,6 @@ Before finishing a task, run `npm run lint`; for changes in config, dependencies
 ## Browser verification workflow
 
 - When a task changes visible UI, verify the result in the browser with the `browser-use` skill.
-- Before using that skill, check the local instructions in `.agents/skills/` and follow the relevant skill file if one exists.
 - Use the browser to check layout, spacing, responsiveness, interaction states, and obvious visual regressions on at least one desktop and one mobile-sized viewport when practical.
 - Prefer a real browser check over guessing from code alone whenever alignment, overflow, or responsive behavior could be affected.
 - If the browser reveals a visual issue, fix the implementation and re-check before finishing.
