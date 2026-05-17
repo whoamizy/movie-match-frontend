@@ -4,7 +4,7 @@
       <div class="surface flex flex-col gap-8 w-full items-center">
         <div class="text-center flex flex-col gap-3 items-center">
           <p
-            class="text-xs text-accent tracking-[0.18em] px-3 py-1 border border-border rounded-full uppercase"
+            class="text-xs text-accent tracking-widest px-3 py-1 border border-border rounded-full uppercase"
           >
             вечерний выбор
           </p>
@@ -22,7 +22,7 @@
         <Transition name="room-action">
           <div
             v-if="isStartVisible"
-            class="p-4 border border-border rounded-md bg-secondary/55 max-w-md w-full shadow-[0_24px_80px_rgba(0,0,0,0.25)]"
+            class="p-4 border border-border rounded-md bg-secondary/55 max-w-md w-full shadow-2xl"
           >
             <div
               class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"

@@ -4,7 +4,7 @@
       <div class="surface flex flex-col gap-8 w-full">
         <div class="flex flex-col gap-3">
           <p
-            class="text-xs text-accent tracking-[0.18em] px-3 py-1 border border-border rounded-full w-fit uppercase"
+            class="text-xs text-accent tracking-widest px-3 py-1 border border-border rounded-full w-fit uppercase"
           >
             приглашение
           </p>
@@ -24,9 +24,7 @@
           aria-busy="true"
           aria-live="polite"
         >
-          <span
-            class="text-xs text-muted-foreground tracking-[0.16em] uppercase"
-          >
+          <span class="text-xs text-muted-foreground tracking-widest uppercase">
             подключение
           </span>
           <div class="p-3 border border-border rounded-md bg-muted">

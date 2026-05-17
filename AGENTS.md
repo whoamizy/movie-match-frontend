@@ -44,6 +44,7 @@ Before finishing a task, run `npm run lint`. For TypeScript, composable, plugin,
 - Do not mutate props directly; use emits or `defineModel`.
 - Keep room/session flow state in the existing composable pattern. As filters, swipes, and matches are added, keep related state in a single store/composable rather than scattering it across pages.
 - Prefer UnoCSS utility classes; use `scoped style` only when utilities are not enough.
+- Use arbitrary-value utility classes like `...-[...]` only when clearly necessary and when no existing token, shortcut, or standard utility fits.
 - Reuse existing UI primitives such as `UiButton` and `UiIcon` before adding new base components.
 - Add new SVG icons under `app/assets/icons` and expose them through the existing `UiIcon` pattern.
 - Do not leave `console.log` in production code; `console.error` is acceptable for errors.
