@@ -15,15 +15,17 @@ MVP flow: create a room, invite the second user, choose filters, rate movies, sh
 - `npm run generate` — generate a static build;
 - `npm run preview` — preview the production build;
 - `npm run lint` — run ESLint and Prettier checks;
+- `npx vue-tsc --noEmit` — check TypeScript and Vue SFC type errors;
 - `npm run lintfix` — auto-fix ESLint issues and format code.
 
-Before finishing a task, run `npm run lint`; for changes in config, dependencies, routing, or build logic, also run `npm run build`.
+Before finishing a task, run `npm run lint`; for TypeScript, composable, store, prop/emit, routing, or API typing changes, also run `npx vue-tsc --noEmit`; for changes in config, dependencies, routing, or build logic, also run `npm run build`.
 
 ## Code style guidelines
 
 - Keep `.vue` block order as `template`, `script`, `style` when present.
 - Always use `<script setup lang="ts">`.
 - Name components in `PascalCase`, composables as `useSomething`, and pages/routes in `kebab-case`.
+- Use `UPPER_SNAKE_CASE` only for immutable module-level constants, env-like values, and other true constants; keep normal local variables, refs, computed values, and function parameters in `camelCase`.
 - Type props and emits with TypeScript; use `any` only with a clear reason.
 - Move business logic out of templates/page components into composables or stores when it is reused or grows.
 - Use `computed` for derived data and `watch` only for side effects.
