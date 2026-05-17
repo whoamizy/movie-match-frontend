@@ -6,19 +6,76 @@
           <p
             class="text-xs text-accent tracking-[0.18em] px-3 py-1 border border-border rounded-full w-fit uppercase"
           >
-            ожидание
+            {{ statusLabel }}
           </p>
           <div class="flex flex-col gap-3">
-            <h1 class="text-4xl heading sm:text-5xl">Ждём второго участника</h1>
+            <h1 class="text-4xl heading sm:text-5xl">
+              {{ pageTitle }}
+            </h1>
             <p class="text-sm text-muted-foreground max-w-xl sm:text-base">
-              Комната создана. Как только второй участник войдёт по ссылке,
-              можно будет перейти к выбору фильмов.
+              {{ pageDescription }}
             </p>
           </div>
         </div>
 
         <div
-          v-if="inviteLink"
+          v-if="isRecoveringCurrentRoom"
+          class="p-4 border border-border rounded-md bg-secondary/55 flex flex-col gap-3"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <span
+            class="text-xs text-muted-foreground tracking-[0.16em] uppercase"
+          >
+            восстановление
+          </span>
+          <div class="p-3 border border-border rounded-md bg-muted">
+            <div class="rounded-md bg-border/70 h-5 w-full animate-pulse" />
+          </div>
+        </div>
+
+        <div
+          v-else-if="isRoomUnavailable"
+          class="p-4 border border-primary/35 rounded-md bg-primary/10 flex flex-col gap-4"
+          role="alert"
+        >
+          <p class="text-sm text-primary">
+            {{ roomUnavailableMessage }}
+          </p>
+          <UiButton
+            type="button"
+            class="w-full sm:w-fit"
+            :disabled="isLoadingCurrent"
+            :aria-busy="isLoadingCurrent"
+            @click="retryLoadCurrentRoom"
+          >
+            {{ isLoadingCurrent ? 'Проверяем сессию...' : 'Проверить ещё раз' }}
+          </UiButton>
+        </div>
+
+        <div
+          v-else-if="isActiveSessionReady"
+          class="p-4 border border-accent/45 rounded-md bg-accent/10 flex flex-col gap-2"
+          aria-live="polite"
+        >
+          <span class="text-xs text-accent tracking-[0.16em] uppercase">
+            участники в комнате{{ participantsLabel }}
+          </span>
+          <p class="text-sm text-foreground">
+            Можно запускать следующий этап подбора, когда он будет готов в MVP.
+          </p>
+        </div>
+
+        <p
+          v-if="realtimeError && activeSession && !isActiveSessionReady"
+          class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10"
+          role="alert"
+        >
+          {{ realtimeError }}
+        </p>
+
+        <div
+          v-if="activeSession && !isActiveSessionReady"
           class="p-4 border border-border rounded-md bg-secondary/55 flex flex-col gap-3"
         >
           <span
@@ -55,34 +112,6 @@
             {{ copyMessage }}
           </p>
         </div>
-
-        <div
-          v-else-if="!isInviteLinkLoaded"
-          class="p-4 border border-border rounded-md bg-secondary/55 flex flex-col gap-3"
-          aria-busy="true"
-          aria-live="polite"
-        >
-          <span
-            class="text-xs text-muted-foreground tracking-[0.16em] uppercase"
-          >
-            Ссылка приглашения
-          </span>
-          <div
-            class="p-3 border border-border rounded-md bg-muted flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div class="rounded-md bg-border/70 h-5 w-full animate-pulse" />
-            <div
-              class="rounded-md bg-border/70 h-10 w-full animate-pulse sm:w-44"
-            />
-          </div>
-        </div>
-
-        <p
-          v-else
-          class="text-sm text-muted-foreground px-4 py-3 border border-border rounded-md bg-secondary/55"
-        >
-          Ссылка приглашения пока недоступна для этой комнаты.
-        </p>
       </div>
     </section>
   </main>
@@ -90,20 +119,88 @@
 
 <script setup lang="ts">
 const route = useRoute()
-const { getStoredInviteLink, saveInviteLink, session } = useRoomSession()
+const {
+  error,
+  isLoadingCurrent,
+  loadCurrentRoom,
+  participantsCount,
+  saveInviteLink,
+  session,
+} = useRoomSession()
 
 const sessionId = computed(() => String(route.params.sessionId ?? ''))
+const { error: realtimeError } = useRoomRealtime(sessionId)
 const activeSession = computed(() =>
   session.value?.sessionId === sessionId.value ? session.value : null,
 )
-const storedInviteLink = ref<string | null>(null)
-const isInviteLinkLoaded = ref(false)
+const isActiveSessionReady = computed(
+  () => activeSession.value?.status === 'READY',
+)
+const hasCheckedCurrentRoom = ref(Boolean(activeSession.value))
 const copyState = ref<'idle' | 'copied' | 'error'>('idle')
 let copyResetTimer: ReturnType<typeof setTimeout> | null = null
 
-const inviteLink = computed(
-  () => activeSession.value?.inviteLink ?? storedInviteLink.value,
+const isRecoveringCurrentRoom = computed(
+  () =>
+    !activeSession.value &&
+    (!hasCheckedCurrentRoom.value || isLoadingCurrent.value),
 )
+const isRoomUnavailable = computed(
+  () =>
+    hasCheckedCurrentRoom.value &&
+    !isLoadingCurrent.value &&
+    !activeSession.value,
+)
+const statusLabel = computed(() => {
+  if (isRecoveringCurrentRoom.value) {
+    return 'проверка'
+  }
+
+  if (isRoomUnavailable.value) {
+    return 'недоступно'
+  }
+
+  return isActiveSessionReady.value ? 'готово' : 'ожидание'
+})
+const pageTitle = computed(() => {
+  if (isRecoveringCurrentRoom.value) {
+    return 'Восстанавливаем комнату'
+  }
+
+  if (isRoomUnavailable.value) {
+    return 'Сессия комнаты недоступна'
+  }
+
+  return isActiveSessionReady.value
+    ? 'Сервис готов к работе'
+    : 'Ждём второго участника'
+})
+const pageDescription = computed(() => {
+  if (isRecoveringCurrentRoom.value) {
+    return 'Проверяем cookie-сессию через backend и возвращаем состояние комнаты.'
+  }
+
+  if (isRoomUnavailable.value) {
+    return 'Эта вкладка не связана с указанной комнатой. Открой актуальную ссылку приглашения или создай новую комнату.'
+  }
+
+  return isActiveSessionReady.value
+    ? 'Оба участника подключены. Следующим шагом здесь появятся фильтры и карточки фильмов.'
+    : 'Комната создана. Как только второй участник войдёт по ссылке, можно будет перейти к выбору фильмов.'
+})
+const roomUnavailableMessage = computed(
+  () =>
+    error.value ??
+    'Backend не подтвердил доступ к этой комнате для текущей cookie-сессии.',
+)
+const inviteLink = computed(() => activeSession.value?.inviteLink ?? '')
+const participantsLabel = computed(() => {
+  if (!participantsCount.value) {
+    return ''
+  }
+
+  return ` · ${participantsCount.value}/2`
+})
 const copyButtonLabel = computed(() =>
   copyState.value === 'copied' ? 'Ссылка скопирована' : 'Скопировать ссылку',
 )
@@ -117,11 +214,6 @@ const copyMessage = computed(() => {
 
   return ''
 })
-
-const loadStoredInviteLink = () => {
-  storedInviteLink.value = getStoredInviteLink(sessionId.value)
-  isInviteLinkLoaded.value = true
-}
 
 const resetCopyStateLater = () => {
   if (copyResetTimer) {
@@ -159,6 +251,27 @@ const copyTextToClipboard = async (text: string) => {
   }
 }
 
+const ensureCurrentRoom = async () => {
+  if (activeSession.value || isLoadingCurrent.value) {
+    hasCheckedCurrentRoom.value = true
+    return
+  }
+
+  hasCheckedCurrentRoom.value = false
+
+  try {
+    await loadCurrentRoom()
+  } catch {
+    // The page shows a user-facing unavailable state.
+  } finally {
+    hasCheckedCurrentRoom.value = true
+  }
+}
+
+const retryLoadCurrentRoom = () => {
+  void ensureCurrentRoom()
+}
+
 const copyInviteLink = async () => {
   if (!inviteLink.value) {
     return
@@ -182,25 +295,17 @@ watch(
     }
 
     saveInviteLink(sessionId.value, activeInviteLink)
-    storedInviteLink.value = activeInviteLink
   },
   { immediate: true },
 )
 
 watch(sessionId, () => {
-  isInviteLinkLoaded.value = false
-  loadStoredInviteLink()
+  hasCheckedCurrentRoom.value = Boolean(activeSession.value)
+  void ensureCurrentRoom()
 })
 
 onMounted(() => {
-  loadStoredInviteLink()
-
-  const activeInviteLink = activeSession.value?.inviteLink
-
-  if (activeInviteLink) {
-    saveInviteLink(sessionId.value, activeInviteLink)
-    storedInviteLink.value = activeInviteLink
-  }
+  void ensureCurrentRoom()
 })
 
 onBeforeUnmount(() => {
