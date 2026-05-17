@@ -1,21 +1,12 @@
-export interface SessionParticipantResponse {
-  id: string
-  nickname: string | null
-}
+import { normalizeApiError } from '~/services/api/errors'
+import type { SessionResponse } from '~/services/api/sessions'
 
-export interface SessionResponse {
-  sessionId: string
-  inviteCode: string
-  inviteLink: string
-  status: string
-  participant: SessionParticipantResponse
-  participantToken: string
-}
-
-const inviteLinkStoragePrefix = 'movie-match:invite-link:'
+const INVITE_LINK_STORAGE_PREFIX = 'movie-match:invite-link:'
+const CREATE_ROOM_ERROR_MESSAGE =
+  'Не удалось создать комнату. Проверь, что backend запущен, и попробуй ещё раз.'
 
 export const useRoomSession = () => {
-  const config = useRuntimeConfig()
+  const { $sessionsApi } = useNuxtApp()
   const session = useState<SessionResponse | null>('room-session', () => null)
   const participantToken = useState<string | null>(
     'room-participant-token',
@@ -25,7 +16,7 @@ export const useRoomSession = () => {
   const error = useState<string | null>('room-error', () => null)
 
   const getInviteLinkStorageKey = (sessionId: string) =>
-    `${inviteLinkStoragePrefix}${sessionId}`
+    `${INVITE_LINK_STORAGE_PREFIX}${sessionId}`
 
   const getStoredInviteLink = (sessionId: string) => {
     if (!sessionId) {
@@ -63,11 +54,7 @@ export const useRoomSession = () => {
     error.value = null
 
     try {
-      const createdSession = await $fetch<SessionResponse>('/sessions', {
-        baseURL: config.public.apiBase,
-        body: {},
-        method: 'POST',
-      })
+      const createdSession = await $sessionsApi.createSession({})
 
       session.value = createdSession
       participantToken.value = createdSession.participantToken
@@ -75,9 +62,10 @@ export const useRoomSession = () => {
 
       return createdSession
     } catch (cause) {
-      error.value =
-        'Не удалось создать комнату. Проверь, что backend запущен, и попробуй ещё раз.'
-      throw cause
+      const apiError = normalizeApiError(cause, CREATE_ROOM_ERROR_MESSAGE)
+
+      error.value = apiError.message
+      throw apiError
     } finally {
       isCreating.value = false
     }
