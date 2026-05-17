@@ -1,21 +1,12 @@
-export interface SessionParticipantResponse {
-  id: string
-  nickname: string | null
-}
-
-export interface SessionResponse {
-  sessionId: string
-  inviteCode: string
-  inviteLink: string
-  status: string
-  participant: SessionParticipantResponse
-  participantToken: string
-}
+import { normalizeApiError } from '~/services/api/errors'
+import type { SessionResponse } from '~/services/api/sessions'
 
 const inviteLinkStoragePrefix = 'movie-match:invite-link:'
+const createRoomErrorMessage =
+  'Не удалось создать комнату. Проверь, что backend запущен, и попробуй ещё раз.'
 
 export const useRoomSession = () => {
-  const config = useRuntimeConfig()
+  const { $sessionsApi } = useNuxtApp()
   const session = useState<SessionResponse | null>('room-session', () => null)
   const participantToken = useState<string | null>(
     'room-participant-token',
@@ -63,11 +54,7 @@ export const useRoomSession = () => {
     error.value = null
 
     try {
-      const createdSession = await $fetch<SessionResponse>('/sessions', {
-        baseURL: config.public.apiBase,
-        body: {},
-        method: 'POST',
-      })
+      const createdSession = await $sessionsApi.createSession({})
 
       session.value = createdSession
       participantToken.value = createdSession.participantToken
@@ -75,9 +62,10 @@ export const useRoomSession = () => {
 
       return createdSession
     } catch (cause) {
-      error.value =
-        'Не удалось создать комнату. Проверь, что backend запущен, и попробуй ещё раз.'
-      throw cause
+      const apiError = normalizeApiError(cause, createRoomErrorMessage)
+
+      error.value = apiError.message
+      throw apiError
     } finally {
       isCreating.value = false
     }
