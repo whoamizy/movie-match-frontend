@@ -3,11 +3,7 @@
     <section class="container py-12 flex min-h-screen items-center">
       <div class="surface flex flex-col gap-8 w-full">
         <div class="flex flex-col gap-3">
-          <p
-            class="text-xs text-accent tracking-widest px-3 py-1 border border-border rounded-full w-fit uppercase"
-          >
-            приглашение
-          </p>
+          <UiBadge variant="accent"> приглашение </UiBadge>
           <div class="flex flex-col gap-3">
             <h1 class="text-4xl heading sm:text-5xl">
               {{ pageTitle }}
@@ -24,9 +20,7 @@
           aria-busy="true"
           aria-live="polite"
         >
-          <span class="text-xs text-muted-foreground tracking-widest uppercase">
-            подключение
-          </span>
+          <UiBadge variant="muted" size="sm"> подключение </UiBadge>
           <div class="p-3 border border-border rounded-md bg-muted">
             <div class="rounded-md bg-border/70 h-5 w-full animate-pulse" />
           </div>
