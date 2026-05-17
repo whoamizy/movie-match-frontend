@@ -11,7 +11,6 @@ export interface SessionResponse {
   inviteLink: string
   status: string
   participant: SessionParticipantResponse
-  participantToken: string
 }
 
 export interface CreateSessionPayload {
@@ -32,6 +31,12 @@ export const createSessionsApi = (api: AxiosInstance) => ({
       `/sessions/${encodeURIComponent(inviteCode)}/join`,
       payload,
     )
+
+    return response.data
+  },
+
+  async getCurrentSession() {
+    const response = await api.get<SessionResponse>('/sessions/current')
 
     return response.data
   },
