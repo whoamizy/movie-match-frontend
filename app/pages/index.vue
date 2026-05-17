@@ -3,11 +3,7 @@
     <section class="container py-12 flex min-h-screen items-center">
       <div class="surface flex flex-col gap-8 w-full items-center">
         <div class="text-center flex flex-col gap-3 items-center">
-          <p
-            class="text-xs text-accent tracking-widest px-3 py-1 border border-border rounded-full uppercase"
-          >
-            вечерний выбор
-          </p>
+          <UiBadge variant="accent"> вечерний выбор </UiBadge>
           <h1 class="text-5xl heading text-center md:text-8xl sm:text-7xl">
             Movie Match
           </h1>

@@ -3,11 +3,9 @@
     <section class="container py-12 flex min-h-screen items-center">
       <div class="surface flex flex-col gap-8 w-full">
         <div class="flex flex-col gap-3">
-          <p
-            class="text-xs text-accent tracking-widest px-3 py-1 border border-border rounded-full w-fit uppercase"
-          >
+          <UiBadge :variant="statusBadgeVariant">
             {{ statusLabel }}
-          </p>
+          </UiBadge>
           <div class="flex flex-col gap-3">
             <h1 class="text-4xl heading sm:text-5xl">
               {{ pageTitle }}
@@ -24,9 +22,7 @@
           aria-busy="true"
           aria-live="polite"
         >
-          <span class="text-xs text-muted-foreground tracking-widest uppercase">
-            восстановление
-          </span>
+          <UiBadge variant="muted" size="sm"> восстановление </UiBadge>
           <div class="p-3 border border-border rounded-md bg-muted">
             <div class="rounded-md bg-border/70 h-5 w-full animate-pulse" />
           </div>
@@ -56,9 +52,9 @@
           class="p-4 border border-accent/45 rounded-md bg-accent/10 flex flex-col gap-2"
           aria-live="polite"
         >
-          <span class="text-xs text-accent tracking-widest uppercase">
+          <UiBadge variant="success" size="sm">
             участники в комнате{{ participantsLabel }}
-          </span>
+          </UiBadge>
           <p class="text-sm text-foreground">
             Можно запускать следующий этап подбора, когда он будет готов в MVP.
           </p>
@@ -76,9 +72,7 @@
           v-if="activeSession && !isActiveSessionReady"
           class="p-4 border border-border rounded-md bg-secondary/55 flex flex-col gap-3"
         >
-          <span class="text-xs text-muted-foreground tracking-widest uppercase">
-            Ссылка приглашения
-          </span>
+          <UiBadge variant="muted" size="sm"> Ссылка приглашения </UiBadge>
           <div
             class="p-3 border border-border rounded-md bg-muted flex flex-col gap-3 min-w-0 sm:flex-row sm:items-center sm:justify-between"
           >
@@ -157,6 +151,17 @@ const statusLabel = computed(() => {
   }
 
   return isActiveSessionReady.value ? 'готово' : 'ожидание'
+})
+const statusBadgeVariant = computed(() => {
+  if (isRoomUnavailable.value) {
+    return 'warning'
+  }
+
+  if (isRecoveringCurrentRoom.value) {
+    return 'muted'
+  }
+
+  return isActiveSessionReady.value ? 'success' : 'accent'
 })
 const pageTitle = computed(() => {
   if (isRecoveringCurrentRoom.value) {
