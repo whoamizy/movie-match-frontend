@@ -28,7 +28,7 @@ export const useRoomSession = () => {
     `${inviteLinkStoragePrefix}${sessionId}`
 
   const getStoredInviteLink = (sessionId: string) => {
-    if (!import.meta.client || !sessionId) {
+    if (!sessionId) {
       return null
     }
 
@@ -40,7 +40,7 @@ export const useRoomSession = () => {
   }
 
   const saveInviteLink = (sessionId: string, inviteLink: string) => {
-    if (!import.meta.client || !sessionId || !inviteLink) {
+    if (!sessionId || !inviteLink) {
       return
     }
 
