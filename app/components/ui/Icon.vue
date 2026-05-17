@@ -12,14 +12,14 @@
 <script setup lang="ts">
 type IconName = 'check' | 'copy'
 
-const iconModules = import.meta.glob<string>('../../assets/icons/*.svg', {
+const ICON_MODULES = import.meta.glob<string>('../../assets/icons/*.svg', {
   eager: true,
   import: 'default',
   query: '?url',
 })
 
-const icons = Object.fromEntries(
-  Object.entries(iconModules).map(([path, url]) => [
+const ICONS = Object.fromEntries(
+  Object.entries(ICON_MODULES).map(([path, url]) => [
     path.split('/').pop()?.replace('.svg', ''),
     url,
   ]),
@@ -37,7 +37,7 @@ const props = withDefaults(
   },
 )
 
-const iconUrl = computed(() => icons[props.name])
+const iconUrl = computed(() => ICONS[props.name])
 const normalizedSize = computed(() => {
   const size = String(props.size)
 

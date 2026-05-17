@@ -1,8 +1,8 @@
 import { normalizeApiError } from '~/services/api/errors'
 import type { SessionResponse } from '~/services/api/sessions'
 
-const inviteLinkStoragePrefix = 'movie-match:invite-link:'
-const createRoomErrorMessage =
+const INVITE_LINK_STORAGE_PREFIX = 'movie-match:invite-link:'
+const CREATE_ROOM_ERROR_MESSAGE =
   'Не удалось создать комнату. Проверь, что backend запущен, и попробуй ещё раз.'
 
 export const useRoomSession = () => {
@@ -16,7 +16,7 @@ export const useRoomSession = () => {
   const error = useState<string | null>('room-error', () => null)
 
   const getInviteLinkStorageKey = (sessionId: string) =>
-    `${inviteLinkStoragePrefix}${sessionId}`
+    `${INVITE_LINK_STORAGE_PREFIX}${sessionId}`
 
   const getStoredInviteLink = (sessionId: string) => {
     if (!sessionId) {
@@ -62,7 +62,7 @@ export const useRoomSession = () => {
 
       return createdSession
     } catch (cause) {
-      const apiError = normalizeApiError(cause, createRoomErrorMessage)
+      const apiError = normalizeApiError(cause, CREATE_ROOM_ERROR_MESSAGE)
 
       error.value = apiError.message
       throw apiError
