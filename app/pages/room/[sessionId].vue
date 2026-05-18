@@ -48,20 +48,40 @@
         </div>
 
         <div
-          v-else-if="isActiveSessionReady"
+          v-else-if="isActiveSessionClosed"
+          class="p-4 border border-primary/35 rounded-md bg-primary/10 flex flex-col gap-4"
+          role="status"
+          aria-live="polite"
+        >
+          <p class="text-sm text-primary">
+            Сессия завершена. Можно создать новую комнату и начать подбор
+            заново.
+          </p>
+          <UiButton type="button" class="w-full sm:w-fit" @click="goHome">
+            Создать новую комнату
+          </UiButton>
+        </div>
+
+        <div
+          v-else-if="activeSession && !isActiveSessionClosed"
           class="p-4 border border-accent/45 rounded-md bg-accent/10 flex flex-col gap-2"
           aria-live="polite"
         >
-          <UiBadge variant="success" size="sm">
+          <UiBadge :variant="participantsBadgeVariant" size="sm">
             участники в комнате{{ participantsLabel }}
           </UiBadge>
           <p class="text-sm text-foreground">
-            Можно запускать следующий этап подбора, когда он будет готов в MVP.
+            {{ participantsStatusMessage }}
           </p>
         </div>
 
         <p
-          v-if="realtimeError && activeSession && !isActiveSessionReady"
+          v-if="
+            realtimeError &&
+            activeSession &&
+            !isActiveSessionReady &&
+            !isActiveSessionClosed
+          "
           class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10"
           role="alert"
         >
@@ -69,7 +89,9 @@
         </p>
 
         <div
-          v-if="activeSession && !isActiveSessionReady"
+          v-if="
+            activeSession && !isActiveSessionReady && !isActiveSessionClosed
+          "
           class="p-4 border border-border rounded-md bg-secondary/55 flex flex-col gap-3"
         >
           <UiBadge variant="muted" size="sm"> Ссылка приглашения </UiBadge>
@@ -111,9 +133,11 @@
 const route = useRoute()
 const {
   error,
+  isLeaving,
   isLoadingCurrent,
   loadCurrentRoom,
   participantsCount,
+  refreshCurrentRoom,
   saveInviteLink,
   session,
 } = useRoomSession()
@@ -126,9 +150,13 @@ const activeSession = computed(() =>
 const isActiveSessionReady = computed(
   () => activeSession.value?.status === 'READY',
 )
+const isActiveSessionClosed = computed(
+  () => activeSession.value?.status === 'CLOSED',
+)
 const hasCheckedCurrentRoom = ref(Boolean(activeSession.value))
 const copyState = ref<'idle' | 'copied' | 'error'>('idle')
 let copyResetTimer: ReturnType<typeof setTimeout> | null = null
+let statusSyncTimer: ReturnType<typeof setInterval> | null = null
 
 const isRecoveringCurrentRoom = computed(
   () =>
@@ -150,6 +178,10 @@ const statusLabel = computed(() => {
     return 'недоступно'
   }
 
+  if (isActiveSessionClosed.value) {
+    return 'завершено'
+  }
+
   return isActiveSessionReady.value ? 'готово' : 'ожидание'
 })
 const statusBadgeVariant = computed(() => {
@@ -161,6 +193,10 @@ const statusBadgeVariant = computed(() => {
     return 'muted'
   }
 
+  if (isActiveSessionClosed.value) {
+    return 'warning'
+  }
+
   return isActiveSessionReady.value ? 'success' : 'accent'
 })
 const pageTitle = computed(() => {
@@ -170,6 +206,10 @@ const pageTitle = computed(() => {
 
   if (isRoomUnavailable.value) {
     return 'Сессия комнаты недоступна'
+  }
+
+  if (isActiveSessionClosed.value) {
+    return 'Сессия завершена'
   }
 
   return isActiveSessionReady.value
@@ -185,6 +225,10 @@ const pageDescription = computed(() => {
     return 'Эта вкладка не связана с указанной комнатой. Открой актуальную ссылку приглашения или создай новую комнату.'
   }
 
+  if (isActiveSessionClosed.value) {
+    return 'Комната закрыта: оба участника вышли и не вернулись.'
+  }
+
   return isActiveSessionReady.value
     ? 'Оба участника подключены. Следующим шагом здесь появятся фильтры и карточки фильмов.'
     : 'Комната создана. Как только второй участник войдёт по ссылке, можно будет перейти к выбору фильмов.'
@@ -196,12 +240,20 @@ const roomUnavailableMessage = computed(
 )
 const inviteLink = computed(() => activeSession.value?.inviteLink ?? '')
 const participantsLabel = computed(() => {
-  if (!participantsCount.value) {
+  if (participantsCount.value === null) {
     return ''
   }
 
   return ` · ${participantsCount.value}/2`
 })
+const participantsBadgeVariant = computed(() =>
+  isActiveSessionReady.value ? 'success' : 'accent',
+)
+const participantsStatusMessage = computed(() =>
+  isActiveSessionReady.value
+    ? 'Можно запускать следующий этап подбора, когда он будет готов в MVP.'
+    : 'Ждём второго участника по ссылке приглашения.',
+)
 const copyButtonLabel = computed(() =>
   copyState.value === 'copied' ? 'Ссылка скопирована' : 'Скопировать ссылку',
 )
@@ -215,7 +267,6 @@ const copyMessage = computed(() => {
 
   return ''
 })
-
 const resetCopyStateLater = () => {
   if (copyResetTimer) {
     clearTimeout(copyResetTimer)
@@ -273,6 +324,10 @@ const retryLoadCurrentRoom = () => {
   void ensureCurrentRoom()
 }
 
+const goHome = async () => {
+  await navigateTo('/')
+}
+
 const copyInviteLink = async () => {
   if (!inviteLink.value) {
     return
@@ -286,6 +341,16 @@ const copyInviteLink = async () => {
   } finally {
     resetCopyStateLater()
   }
+}
+
+const syncActiveSessionStatus = () => {
+  if (!activeSession.value || isActiveSessionClosed.value || isLeaving.value) {
+    return
+  }
+
+  void refreshCurrentRoom().catch(() => {
+    // Realtime remains the primary path; polling is only a quiet stale-state guard.
+  })
 }
 
 watch(
@@ -307,11 +372,16 @@ watch(sessionId, () => {
 
 onMounted(() => {
   void ensureCurrentRoom()
+  statusSyncTimer = setInterval(syncActiveSessionStatus, 2000)
 })
 
 onBeforeUnmount(() => {
   if (copyResetTimer) {
     clearTimeout(copyResetTimer)
+  }
+
+  if (statusSyncTimer) {
+    clearInterval(statusSyncTimer)
   }
 })
 </script>
