@@ -63,47 +63,17 @@
         </div>
 
         <div
-          v-else-if="isActiveSessionReady"
+          v-else-if="activeSession && !isActiveSessionClosed"
           class="p-4 border border-accent/45 rounded-md bg-accent/10 flex flex-col gap-2"
           aria-live="polite"
         >
-          <UiBadge variant="success" size="sm">
+          <UiBadge :variant="participantsBadgeVariant" size="sm">
             участники в комнате{{ participantsLabel }}
           </UiBadge>
           <p class="text-sm text-foreground">
-            Можно запускать следующий этап подбора, когда он будет готов в MVP.
+            {{ participantsStatusMessage }}
           </p>
         </div>
-
-        <div
-          v-if="isCreatorCloseActionVisible"
-          class="p-4 border border-primary/35 rounded-md bg-primary/10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div class="flex flex-col gap-2 min-w-0">
-            <UiBadge variant="warning" size="sm"> управление сессией </UiBadge>
-            <p class="text-sm text-primary">
-              Завершение сразу закрывает комнату для всех участников.
-            </p>
-          </div>
-          <UiButton
-            type="button"
-            class="text-primary-foreground bg-primary shrink-0 gap-2 w-full sm:w-auto"
-            :disabled="isClosing"
-            :aria-busy="isClosing"
-            @click="closeActiveSession"
-          >
-            <UiIcon name="close-session" size="18" data-icon="inline-start" />
-            <span>{{ closeButtonLabel }}</span>
-          </UiButton>
-        </div>
-
-        <p
-          v-if="closeMessage"
-          class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10"
-          role="alert"
-        >
-          {{ closeMessage }}
-        </p>
 
         <p
           v-if="
@@ -162,9 +132,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const {
-  closeRoom,
   error,
-  isClosing,
   isLeaving,
   isLoadingCurrent,
   loadCurrentRoom,
@@ -258,7 +226,7 @@ const pageDescription = computed(() => {
   }
 
   if (isActiveSessionClosed.value) {
-    return 'Комната закрыта: все участники вышли или создатель явно завершил сессию.'
+    return 'Комната закрыта: оба участника вышли и не вернулись.'
   }
 
   return isActiveSessionReady.value
@@ -278,22 +246,19 @@ const participantsLabel = computed(() => {
 
   return ` · ${participantsCount.value}/2`
 })
+const participantsBadgeVariant = computed(() =>
+  isActiveSessionReady.value ? 'success' : 'accent',
+)
+const participantsStatusMessage = computed(() =>
+  isActiveSessionReady.value
+    ? 'Можно запускать следующий этап подбора, когда он будет готов в MVP.'
+    : 'Ждём второго участника по ссылке приглашения.',
+)
 const copyButtonLabel = computed(() =>
   copyState.value === 'copied' ? 'Ссылка скопирована' : 'Скопировать ссылку',
 )
 const copyButtonIcon = computed(() =>
   copyState.value === 'copied' ? 'check' : 'copy',
-)
-const isCreatorCloseActionVisible = computed(() => {
-  const status = activeSession.value?.status
-
-  return (
-    activeSession.value?.participant.isCreator === true &&
-    (status === 'WAITING' || status === 'READY')
-  )
-})
-const closeButtonLabel = computed(() =>
-  isClosing.value ? 'Завершаем...' : 'Завершить сессию',
 )
 const copyMessage = computed(() => {
   if (copyState.value === 'error') {
@@ -302,14 +267,6 @@ const copyMessage = computed(() => {
 
   return ''
 })
-const closeMessage = computed(() => {
-  if (!activeSession.value || !error.value) {
-    return ''
-  }
-
-  return error.value
-})
-
 const resetCopyStateLater = () => {
   if (copyResetTimer) {
     clearTimeout(copyResetTimer)
@@ -383,18 +340,6 @@ const copyInviteLink = async () => {
     copyState.value = 'error'
   } finally {
     resetCopyStateLater()
-  }
-}
-
-const closeActiveSession = async () => {
-  if (!activeSession.value || isClosing.value) {
-    return
-  }
-
-  try {
-    await closeRoom(activeSession.value.sessionId)
-  } catch {
-    // The page shows a user-facing action error.
   }
 }
 

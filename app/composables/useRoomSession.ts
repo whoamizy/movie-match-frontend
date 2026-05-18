@@ -10,8 +10,6 @@ const CURRENT_ROOM_ERROR_MESSAGE =
   'Не удалось восстановить текущую комнату. Войди по ссылке приглашения ещё раз.'
 const LEAVE_ROOM_ERROR_MESSAGE =
   'Не удалось выйти из сессии. Проверь соединение и попробуй ещё раз.'
-const CLOSE_ROOM_ERROR_MESSAGE =
-  'Не удалось завершить сессию. Проверь соединение и попробуй ещё раз.'
 const READY_SESSION_STATUS = 'READY'
 const CLOSED_SESSION_STATUS = 'CLOSED'
 
@@ -25,7 +23,6 @@ export const useRoomSession = () => {
   const isCreating = useState('room-is-creating', () => false)
   const isJoining = useState('room-is-joining', () => false)
   const isLeaving = useState('room-is-leaving', () => false)
-  const isClosing = useState('room-is-closing', () => false)
   const isLoadingCurrent = useState('room-is-loading-current', () => false)
   const hasLeftSession = useState('room-has-left-session', () => false)
   const error = useState<string | null>('room-error', () => null)
@@ -198,37 +195,6 @@ export const useRoomSession = () => {
     }
   }
 
-  const closeRoom = async (sessionId: string) => {
-    if (!sessionId || isClosing.value) {
-      return session.value
-    }
-
-    isClosing.value = true
-    error.value = null
-
-    try {
-      const result = await $sessionsApi.closeSession(sessionId)
-
-      if (session.value?.sessionId === sessionId) {
-        session.value = {
-          ...session.value,
-          status: result.status,
-        }
-      }
-
-      participantsCount.value = 0
-
-      return session.value
-    } catch (cause) {
-      const apiError = normalizeApiError(cause, CLOSE_ROOM_ERROR_MESSAGE)
-
-      error.value = apiError.message
-      throw apiError
-    } finally {
-      isClosing.value = false
-    }
-  }
-
   const updateSessionStatus = (status: string) => {
     if (!session.value || session.value.status === status) {
       return
@@ -245,13 +211,11 @@ export const useRoomSession = () => {
   }
 
   return {
-    closeRoom,
     createRoom,
     error,
     getStoredInviteLink,
     hasLeftSession,
     isCreating,
-    isClosing,
     isJoining,
     isLeaving,
     isLoadingCurrent,

@@ -2,6 +2,7 @@ import { io, type Socket } from 'socket.io-client'
 
 interface SessionUpdatedPayload {
   status: string
+  participantsCount: number
 }
 
 interface SessionStatePayload extends SessionUpdatedPayload {
@@ -10,6 +11,7 @@ interface SessionStatePayload extends SessionUpdatedPayload {
 
 interface ParticipantChangedPayload {
   participantId: string
+  status: string
   participantsCount: number
 }
 
@@ -106,6 +108,8 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
     })
 
     socket.on('session:updated', (payload: SessionUpdatedPayload) => {
+      updateParticipantsCount(payload.participantsCount)
+
       if (payload.status === CLOSED_SESSION_STATUS) {
         markSessionClosed()
         return
@@ -116,7 +120,7 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
 
     socket.on('session:ready', (payload?: SessionUpdatedPayload) => {
       updateSessionStatus(payload?.status ?? READY_SESSION_STATUS)
-      updateParticipantsCount(2)
+      updateParticipantsCount(payload?.participantsCount ?? 2)
     })
 
     socket.on('session:joined', () => {
@@ -125,10 +129,12 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
 
     socket.on('participant:joined', (payload: ParticipantChangedPayload) => {
       error.value = null
+      updateSessionStatus(payload.status)
       updateParticipantsCount(payload.participantsCount)
     })
 
     socket.on('participant:left', (payload: ParticipantChangedPayload) => {
+      updateSessionStatus(payload.status)
       updateParticipantsCount(payload.participantsCount)
       revalidateCurrentRoom()
     })

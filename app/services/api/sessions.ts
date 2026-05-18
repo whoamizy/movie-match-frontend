@@ -20,10 +20,6 @@ export interface LeaveSessionResponse {
   status: string
 }
 
-export interface CloseSessionResponse {
-  status: string
-}
-
 export interface CreateSessionPayload {
   nickname?: string
 }
@@ -55,14 +51,6 @@ export const createSessionsApi = (api: AxiosInstance) => ({
   async leaveSession(sessionId: string) {
     const response = await api.post<LeaveSessionResponse>(
       `/sessions/${encodeURIComponent(sessionId)}/leave`,
-    )
-
-    return response.data
-  },
-
-  async closeSession(sessionId: string) {
-    const response = await api.post<CloseSessionResponse>(
-      `/sessions/${encodeURIComponent(sessionId)}/close`,
     )
 
     return response.data
