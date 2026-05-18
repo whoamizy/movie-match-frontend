@@ -8,12 +8,18 @@ interface SessionStatePayload extends SessionUpdatedPayload {
   participantsCount: number
 }
 
+interface ParticipantChangedPayload {
+  participantId: string
+  participantsCount: number
+}
+
 const READY_SESSION_STATUS = 'READY'
+const CLOSED_SESSION_STATUS = 'CLOSED'
 
 export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
   const config = useRuntimeConfig()
   const {
-    participantsCount,
+    refreshCurrentRoom,
     session,
     updateParticipantsCount,
     updateSessionStatus,
@@ -21,6 +27,7 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
   const isConnected = ref(false)
   const error = ref<string | null>(null)
   let socket: Socket | null = null
+  let revalidationTimer: ReturnType<typeof setTimeout> | null = null
 
   const normalizedSessionId = computed(() => toValue(sessionId))
   const isActiveSession = computed(
@@ -40,6 +47,27 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
     isConnected.value = false
   }
 
+  const markSessionClosed = () => {
+    error.value = null
+    updateSessionStatus(CLOSED_SESSION_STATUS)
+    updateParticipantsCount(0)
+    disconnect()
+  }
+
+  const revalidateCurrentRoom = () => {
+    if (!import.meta.client || revalidationTimer || !isActiveSession.value) {
+      return
+    }
+
+    revalidationTimer = setTimeout(() => {
+      revalidationTimer = null
+
+      void refreshCurrentRoom().catch(() => {
+        // Realtime should not surface current-room fallback failures as UI noise.
+      })
+    }, 300)
+  }
+
   const connect = () => {
     if (!import.meta.client || socket || !isActiveSession.value) {
       return
@@ -57,19 +85,32 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
 
     socket.on('disconnect', () => {
       isConnected.value = false
+      revalidateCurrentRoom()
     })
 
     socket.on('connect_error', () => {
       error.value = 'Не удалось подключиться к событиям комнаты.'
       isConnected.value = false
+      revalidateCurrentRoom()
     })
 
     socket.on('session:state', (payload: SessionStatePayload) => {
-      updateSessionStatus(payload.status)
       updateParticipantsCount(payload.participantsCount)
+
+      if (payload.status === CLOSED_SESSION_STATUS) {
+        markSessionClosed()
+        return
+      }
+
+      updateSessionStatus(payload.status)
     })
 
     socket.on('session:updated', (payload: SessionUpdatedPayload) => {
+      if (payload.status === CLOSED_SESSION_STATUS) {
+        markSessionClosed()
+        return
+      }
+
       updateSessionStatus(payload.status)
     })
 
@@ -82,10 +123,17 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
       error.value = null
     })
 
-    socket.on('participant:joined', () => {
+    socket.on('participant:joined', (payload: ParticipantChangedPayload) => {
       error.value = null
-      updateParticipantsCount(Math.max(participantsCount.value ?? 1, 2))
+      updateParticipantsCount(payload.participantsCount)
     })
+
+    socket.on('participant:left', (payload: ParticipantChangedPayload) => {
+      updateParticipantsCount(payload.participantsCount)
+      revalidateCurrentRoom()
+    })
+
+    socket.on('session:closed', markSessionClosed)
   }
 
   watch(
@@ -102,7 +150,14 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
     { immediate: true },
   )
 
-  onBeforeUnmount(disconnect)
+  onBeforeUnmount(() => {
+    if (revalidationTimer) {
+      clearTimeout(revalidationTimer)
+      revalidationTimer = null
+    }
+
+    disconnect()
+  })
 
   return {
     error,
