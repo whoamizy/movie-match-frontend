@@ -136,11 +136,9 @@ const STAGE_DESCRIPTIONS: Record<RoomStage, string> = {
 const route = useRoute()
 const {
   error,
-  isLeaving,
   isLoadingCurrent,
   loadCurrentRoom,
   participantsCount,
-  refreshCurrentRoom,
   saveInviteLink,
   session,
 } = useRoomSession()
@@ -153,7 +151,6 @@ const activeSession = computed(() =>
 const { loadSelectionState, resetRoomStage, roomStage } =
   useRoomStage(activeSession)
 const hasCheckedCurrentRoom = ref(Boolean(activeSession.value))
-let statusSyncTimer: ReturnType<typeof setInterval> | null = null
 
 const isRecoveringCurrentRoom = computed(
   () =>
@@ -273,20 +270,6 @@ const handlePreferencesSaved = () => {
   void loadSelectionState()
 }
 
-const syncActiveSessionStatus = () => {
-  if (
-    !activeSession.value ||
-    roomStage.value === 'FINISHED' ||
-    isLeaving.value
-  ) {
-    return
-  }
-
-  void refreshCurrentRoom().catch(() => {
-    // Realtime remains the primary path; polling is only a quiet stale-state guard.
-  })
-}
-
 watch(
   () => activeSession.value?.inviteLink,
   (activeInviteLink) => {
@@ -307,12 +290,5 @@ watch(sessionId, () => {
 
 onMounted(() => {
   void ensureCurrentRoom()
-  statusSyncTimer = setInterval(syncActiveSessionStatus, 2000)
-})
-
-onBeforeUnmount(() => {
-  if (statusSyncTimer) {
-    clearInterval(statusSyncTimer)
-  }
 })
 </script>
