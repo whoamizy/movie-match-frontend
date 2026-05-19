@@ -4,6 +4,8 @@ import type { MoviesApi } from '~/services/api/movies'
 import { createMoviesApi } from '~/services/api/movies'
 import type { PreferencesApi } from '~/services/api/preferences'
 import { createPreferencesApi } from '~/services/api/preferences'
+import type { SelectionApi } from '~/services/api/selection'
+import { createSelectionApi } from '~/services/api/selection'
 import type { SessionsApi } from '~/services/api/sessions'
 import { createSessionsApi } from '~/services/api/sessions'
 
@@ -12,6 +14,7 @@ declare module '#app' {
     $api: AxiosInstance
     $moviesApi: MoviesApi
     $preferencesApi: PreferencesApi
+    $selectionApi: SelectionApi
     $sessionsApi: SessionsApi
   }
 }
@@ -21,6 +24,7 @@ declare module 'vue' {
     $api: AxiosInstance
     $moviesApi: MoviesApi
     $preferencesApi: PreferencesApi
+    $selectionApi: SelectionApi
     $sessionsApi: SessionsApi
   }
 }
@@ -41,6 +45,7 @@ export default defineNuxtPlugin(() => {
       api,
       moviesApi: createMoviesApi(api),
       preferencesApi: createPreferencesApi(api),
+      selectionApi: createSelectionApi(api),
       sessionsApi: createSessionsApi(api),
     },
   }
