@@ -5,6 +5,9 @@ import type {
 import type { SessionResponse } from '~/services/api/sessions'
 
 const READY_SESSION_STATUS = 'READY'
+const WAITING_SESSION_STATUS = 'WAITING'
+const IN_PROGRESS_SESSION_STATUS = 'IN_PROGRESS'
+const COMPLETED_SESSION_STATUS = 'COMPLETED'
 const CLOSED_SESSION_STATUS = 'CLOSED'
 
 export const useRoomStage = (
@@ -13,7 +16,6 @@ export const useRoomStage = (
   const { $selectionApi } = useNuxtApp()
   const selectionState = ref<SelectionStateResponse | null>(null)
   const isLoadingSelectionState = ref(false)
-  const localPreferencesReady = ref(false)
 
   const normalizedSession = computed(() => toValue(activeSession))
   const selectionSyncKey = computed(() => {
@@ -22,27 +24,10 @@ export const useRoomStage = (
     return session ? `${session.sessionId}:${session.status}` : ''
   })
 
-  const fallbackStage = computed<RoomStage | null>(() => {
-    const session = normalizedSession.value
-
-    if (!session) {
-      return null
-    }
-
-    if (session.status === CLOSED_SESSION_STATUS) {
-      return 'FINISHED'
-    }
-
-    if (session.status !== READY_SESSION_STATUS) {
-      return 'WAITING'
-    }
-
-    if (localPreferencesReady.value || selectionState.value?.preferences) {
-      return 'CHOOSING'
-    }
-
-    return 'FILTERS'
-  })
+  const isFinishedSession = (status: string) =>
+    status === COMPLETED_SESSION_STATUS || status === CLOSED_SESSION_STATUS
+  const isSelectionDrivenSession = (status: string) =>
+    status === READY_SESSION_STATUS || status === IN_PROGRESS_SESSION_STATUS
 
   const roomStage = computed<RoomStage | null>(() => {
     const session = normalizedSession.value
@@ -51,15 +36,18 @@ export const useRoomStage = (
       return null
     }
 
-    if (session.status === CLOSED_SESSION_STATUS) {
+    if (isFinishedSession(session.status)) {
       return 'FINISHED'
     }
 
-    if (session.status !== READY_SESSION_STATUS) {
+    if (
+      session.status === WAITING_SESSION_STATUS ||
+      !isSelectionDrivenSession(session.status)
+    ) {
       return 'WAITING'
     }
 
-    return selectionState.value?.stage ?? fallbackStage.value
+    return selectionState.value?.stage ?? 'WAITING'
   })
 
   const loadSelectionState = async () => {
@@ -82,34 +70,19 @@ export const useRoomStage = (
     return selectionState.value
   }
 
-  const markPreferencesReady = () => {
-    localPreferencesReady.value = true
-
-    if (selectionState.value && selectionState.value.stage === 'FILTERS') {
-      selectionState.value = {
-        ...selectionState.value,
-        stage: 'CHOOSING',
-      }
-    }
-  }
-
   const resetRoomStage = () => {
     selectionState.value = null
-    localPreferencesReady.value = false
   }
 
   watch(
     selectionSyncKey,
-    (nextKey, previousKey) => {
+    (nextKey) => {
       if (!nextKey) {
         resetRoomStage()
         return
       }
 
-      if (nextKey.split(':')[0] !== previousKey?.split(':')[0]) {
-        localPreferencesReady.value = false
-      }
-
+      selectionState.value = null
       void loadSelectionState()
     },
     { immediate: true },
@@ -118,7 +91,6 @@ export const useRoomStage = (
   return {
     isLoadingSelectionState,
     loadSelectionState,
-    markPreferencesReady,
     resetRoomStage,
     roomStage,
     selectionState,

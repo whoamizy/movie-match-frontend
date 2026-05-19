@@ -123,7 +123,7 @@ const STAGE_TITLES: Record<RoomStage, string> = {
 }
 const STAGE_DESCRIPTIONS: Record<RoomStage, string> = {
   CHOOSING:
-    'Фильтры сохранены. Следующий экран с карточками фильмов будет добавлен в MVP.',
+    'Фильтры сохранены на backend. Следующий экран подключит карточки фильмов к готовому API.',
   FILTERS:
     'Оба участника подключены. Выбери жанры, рейтинг и годы выпуска, чтобы подготовить подборку.',
   FINISHED: 'Комната закрыта: оба участника вышли и не вернулись.',
@@ -150,7 +150,7 @@ const { error: realtimeError } = useRoomRealtime(sessionId)
 const activeSession = computed(() =>
   session.value?.sessionId === sessionId.value ? session.value : null,
 )
-const { markPreferencesReady, resetRoomStage, roomStage } =
+const { loadSelectionState, resetRoomStage, roomStage } =
   useRoomStage(activeSession)
 const hasCheckedCurrentRoom = ref(Boolean(activeSession.value))
 let statusSyncTimer: ReturnType<typeof setInterval> | null = null
@@ -270,7 +270,7 @@ const goHome = async () => {
 }
 
 const handlePreferencesSaved = () => {
-  markPreferencesReady()
+  void loadSelectionState()
 }
 
 const syncActiveSessionStatus = () => {

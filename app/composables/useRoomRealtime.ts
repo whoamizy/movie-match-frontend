@@ -16,6 +16,7 @@ interface ParticipantChangedPayload {
 }
 
 const READY_SESSION_STATUS = 'READY'
+const COMPLETED_SESSION_STATUS = 'COMPLETED'
 const CLOSED_SESSION_STATUS = 'CLOSED'
 
 export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
@@ -140,6 +141,18 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
     })
 
     socket.on('session:closed', markSessionClosed)
+
+    socket.on('session:completed', () => {
+      error.value = null
+      updateSessionStatus(COMPLETED_SESSION_STATUS)
+      revalidateCurrentRoom()
+    })
+
+    socket.on('final:selected', () => {
+      error.value = null
+      updateSessionStatus(COMPLETED_SESSION_STATUS)
+      revalidateCurrentRoom()
+    })
   }
 
   watch(
