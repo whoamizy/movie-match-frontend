@@ -1,8 +1,8 @@
 import type { AxiosInstance } from 'axios'
 
 export interface MovieGenre {
+  id: number
   name: string
-  slug: string | null
 }
 
 export interface MovieGenresResponse {

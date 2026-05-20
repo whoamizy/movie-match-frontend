@@ -15,11 +15,18 @@ interface ParticipantChangedPayload {
   participantsCount: number
 }
 
+interface RoomRealtimeOptions {
+  onSelectionStateChanged?: () => void | Promise<void>
+}
+
 const READY_SESSION_STATUS = 'READY'
 const COMPLETED_SESSION_STATUS = 'COMPLETED'
 const CLOSED_SESSION_STATUS = 'CLOSED'
 
-export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
+export const useRoomRealtime = (
+  sessionId: MaybeRefOrGetter<string>,
+  options: RoomRealtimeOptions = {},
+) => {
   const config = useRuntimeConfig()
   const {
     refreshCurrentRoom,
@@ -31,6 +38,7 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
   const error = ref<string | null>(null)
   let socket: Socket | null = null
   let revalidationTimer: ReturnType<typeof setTimeout> | null = null
+  let selectionStateTimer: ReturnType<typeof setTimeout> | null = null
 
   const normalizedSessionId = computed(() => toValue(sessionId))
   const isActiveSession = computed(
@@ -69,6 +77,22 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
         // Realtime should not surface current-room fallback failures as UI noise.
       })
     }, 300)
+  }
+
+  const syncSelectionState = () => {
+    if (
+      selectionStateTimer ||
+      !isActiveSession.value ||
+      !options.onSelectionStateChanged
+    ) {
+      return
+    }
+
+    selectionStateTimer = setTimeout(() => {
+      selectionStateTimer = null
+
+      void options.onSelectionStateChanged?.()
+    }, 150)
   }
 
   const connect = () => {
@@ -122,6 +146,7 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
     socket.on('session:ready', (payload?: SessionUpdatedPayload) => {
       updateSessionStatus(payload?.status ?? READY_SESSION_STATUS)
       updateParticipantsCount(payload?.participantsCount ?? 2)
+      syncSelectionState()
     })
 
     socket.on('session:joined', () => {
@@ -139,6 +164,10 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
       updateParticipantsCount(payload.participantsCount)
       revalidateCurrentRoom()
     })
+
+    socket.on('preferences:updated', syncSelectionState)
+
+    socket.on('selection:ready', syncSelectionState)
 
     socket.on('session:closed', markSessionClosed)
 
@@ -173,6 +202,11 @@ export const useRoomRealtime = (sessionId: MaybeRefOrGetter<string>) => {
     if (revalidationTimer) {
       clearTimeout(revalidationTimer)
       revalidationTimer = null
+    }
+
+    if (selectionStateTimer) {
+      clearTimeout(selectionStateTimer)
+      selectionStateTimer = null
     }
 
     disconnect()

@@ -82,6 +82,9 @@
             :session-id="activeSession.sessionId"
             @preferences-saved="handlePreferencesSaved"
           />
+          <RoomWaitingPartnerFiltersStage
+            v-else-if="roomStage === 'WAITING_PARTNER_FILTERS'"
+          />
           <RoomChoosingStage v-else-if="roomStage === 'CHOOSING'" />
           <RoomMatchedStage v-else-if="roomStage === 'MATCHED'" />
           <RoomFinishedStage
@@ -103,6 +106,7 @@ const STAGE_STATUS_LABELS: Record<RoomStage, string> = {
   FINISHED: 'завершено',
   MATCHED: 'совпадение',
   WAITING: 'ожидание',
+  WAITING_PARTNER_FILTERS: 'ожидание фильтров',
 }
 const STAGE_BADGE_VARIANTS: Record<
   RoomStage,
@@ -113,6 +117,7 @@ const STAGE_BADGE_VARIANTS: Record<
   FINISHED: 'warning',
   MATCHED: 'success',
   WAITING: 'accent',
+  WAITING_PARTNER_FILTERS: 'accent',
 }
 const STAGE_TITLES: Record<RoomStage, string> = {
   CHOOSING: 'Выбираем фильм',
@@ -120,10 +125,11 @@ const STAGE_TITLES: Record<RoomStage, string> = {
   FINISHED: 'Сессия завершена',
   MATCHED: 'Есть совпадение',
   WAITING: 'Ждём второго участника',
+  WAITING_PARTNER_FILTERS: 'Ждём фильтры партнёра',
 }
 const STAGE_DESCRIPTIONS: Record<RoomStage, string> = {
   CHOOSING:
-    'Фильтры сохранены на backend. Следующий экран подключит карточки фильмов к готовому API.',
+    'Фильтры обоих участников сохранены. Комната готова к следующему шагу выбора фильма.',
   FILTERS:
     'Оба участника подключены. Выбери жанры, рейтинг и годы выпуска, чтобы подготовить подборку.',
   FINISHED: 'Комната закрыта: оба участника вышли и не вернулись.',
@@ -131,6 +137,8 @@ const STAGE_DESCRIPTIONS: Record<RoomStage, string> = {
     'Найден общий фильм. Следующий шаг покажет карточку совпадения и варианты продолжения.',
   WAITING:
     'Комната создана. Как только второй участник войдёт по ссылке, можно будет перейти к выбору фильмов.',
+  WAITING_PARTNER_FILTERS:
+    'Твои фильтры уже сохранены. Осталось дождаться настроек второго участника.',
 }
 
 const route = useRoute()
@@ -144,12 +152,14 @@ const {
 } = useRoomSession()
 
 const sessionId = computed(() => String(route.params.sessionId ?? ''))
-const { error: realtimeError } = useRoomRealtime(sessionId)
 const activeSession = computed(() =>
   session.value?.sessionId === sessionId.value ? session.value : null,
 )
 const { loadSelectionState, resetRoomStage, roomStage } =
   useRoomStage(activeSession)
+const { error: realtimeError } = useRoomRealtime(sessionId, {
+  onSelectionStateChanged: loadSelectionState,
+})
 const hasCheckedCurrentRoom = ref(Boolean(activeSession.value))
 
 const isRecoveringCurrentRoom = computed(
@@ -223,7 +233,9 @@ const participantsLabel = computed(() => {
   return ` · ${participantsCount.value}/2`
 })
 const participantsBadgeVariant = computed(() =>
-  roomStage.value === 'WAITING' ? 'accent' : 'success',
+  roomStage.value === 'WAITING' || roomStage.value === 'WAITING_PARTNER_FILTERS'
+    ? 'accent'
+    : 'success',
 )
 const participantsStatusMessage = computed(() => {
   if (roomStage.value === 'WAITING') {
@@ -232,6 +244,10 @@ const participantsStatusMessage = computed(() => {
 
   if (roomStage.value === 'FILTERS') {
     return 'Комната собрана. Осталось настроить фильтры под общий вечер.'
+  }
+
+  if (roomStage.value === 'WAITING_PARTNER_FILTERS') {
+    return 'Твои фильтры сохранены. Ждём настройки второго участника.'
   }
 
   if (roomStage.value === 'MATCHED') {
