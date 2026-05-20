@@ -4,6 +4,7 @@ import type { PreferencesResponse } from '~/services/api/preferences'
 export type RoomStage =
   | 'WAITING'
   | 'FILTERS'
+  | 'WAITING_PARTNER_FILTERS'
   | 'CHOOSING'
   | 'MATCHED'
   | 'FINISHED'

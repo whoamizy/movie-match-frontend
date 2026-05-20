@@ -48,7 +48,7 @@
       >
         <UiChips
           v-for="genre in genres"
-          :key="getGenreKey(genre)"
+          :key="genre.id"
           :selected="isGenreSelected(genre)"
           :disabled="isGenreDisabled(genre)"
           :value="genre.name"
@@ -266,12 +266,8 @@ const parseReleaseYear = (value: string) => {
   return Number(value)
 }
 
-const getGenreKey = (genre: MovieGenre) => genre.slug ?? genre.name
-
 const isGenreSelected = (genre: MovieGenre) =>
-  selectedGenres.value.some(
-    (selectedGenre) => selectedGenre.name === genre.name,
-  )
+  selectedGenres.value.some((selectedGenre) => selectedGenre.id === genre.id)
 
 const isGenreDisabled = (genre: MovieGenre) =>
   isSubmittingPreferences.value ||
@@ -283,7 +279,7 @@ const toggleGenre = (genre: MovieGenre) => {
 
   if (isGenreSelected(genre)) {
     selectedGenres.value = selectedGenres.value.filter(
-      (selectedGenre) => selectedGenre.name !== genre.name,
+      (selectedGenre) => selectedGenre.id !== genre.id,
     )
     return
   }
@@ -326,7 +322,7 @@ const submitPreferences = async () => {
 
   try {
     await $preferencesApi.updatePreferences(props.sessionId, {
-      genres: selectedGenres.value,
+      genreIds: selectedGenres.value.map((genre) => genre.id),
       minRating: minRating.value,
       releaseYearFrom: releaseYearFromNumber.value ?? undefined,
       releaseYearTo: releaseYearToNumber.value ?? undefined,

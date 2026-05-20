@@ -1,8 +1,7 @@
 import type { AxiosInstance } from 'axios'
-import type { MovieGenre } from '~/services/api/movies'
 
 export interface UpdatePreferencesPayload {
-  genres: MovieGenre[]
+  genreIds: number[]
   minRating?: number
   releaseYearFrom?: number
   releaseYearTo?: number
@@ -12,7 +11,7 @@ export interface PreferencesResponse {
   id: string
   sessionId: string
   participantId: string
-  genres: string[]
+  genreIds: number[]
   minRating: number | null
   releaseYearFrom: number | null
   releaseYearTo: number | null
