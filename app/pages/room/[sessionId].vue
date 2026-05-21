@@ -85,7 +85,10 @@
           <RoomWaitingPartnerFiltersStage
             v-else-if="roomStage === 'WAITING_PARTNER_FILTERS'"
           />
-          <RoomChoosingStage v-else-if="roomStage === 'CHOOSING'" />
+          <RoomChoosingStage
+            v-else-if="roomStage === 'CHOOSING'"
+            :session-id="activeSession.sessionId"
+          />
           <RoomMatchedStage v-else-if="roomStage === 'MATCHED'" />
           <RoomFinishedStage
             v-else-if="roomStage === 'FINISHED'"

@@ -9,9 +9,30 @@ export interface MovieGenresResponse {
   genres: MovieGenre[]
 }
 
+export interface MovieCardResponse {
+  id: string
+  poiskinoId: string
+  title: string
+  originalTitle: string | null
+  description: string | null
+  posterUrl: string | null
+  rating: number | null
+  releaseYear: number | null
+  durationMinutes: number | null
+  genres: string[]
+}
+
 export const createMoviesApi = (api: AxiosInstance) => ({
   async getGenres() {
     const response = await api.get<MovieGenresResponse>('/movies/genres')
+
+    return response.data
+  },
+
+  async getNextMovie(sessionId: string) {
+    const response = await api.get<MovieCardResponse | null>(
+      `/sessions/${encodeURIComponent(sessionId)}/movies/next`,
+    )
 
     return response.data
   },
