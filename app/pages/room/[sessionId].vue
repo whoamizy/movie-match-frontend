@@ -73,10 +73,13 @@
             :is-restarting="isCreating"
             :restart-error="error"
             :session-id="activeSession.sessionId"
-            @match-found="handleMatchFound"
             @restart-requested="handleRestartRequested"
+            @selection-state-changed="handleSelectionStateChanged"
           />
-          <RoomMatchedStage v-else-if="roomStage === 'MATCHED'" />
+          <RoomMatchedStage
+            v-else-if="roomStage === 'MATCHED'"
+            :movie="selectionState?.matchedMovie ?? null"
+          />
           <RoomFinishedStage
             v-else-if="roomStage === 'FINISHED'"
             @create-new-room="goHome"
@@ -88,7 +91,10 @@
 </template>
 
 <script setup lang="ts">
-import type { RoomStage } from '~/services/api/selection'
+import type {
+  RoomStage,
+  SelectionStateResponse,
+} from '~/services/api/selection'
 
 const STAGE_STATUS_LABELS: Record<RoomStage, string> = {
   CHOOSING: 'выбор',
@@ -124,7 +130,7 @@ const STAGE_DESCRIPTIONS: Record<RoomStage, string> = {
     'Оба участника подключены. Выбери любимые жанры, исключения, рейтинг и годы, чтобы подготовить общую подборку.',
   FINISHED: 'Комната закрыта: оба участника вышли и не вернулись.',
   MATCHED:
-    'Найден общий фильм. Следующий шаг покажет карточку совпадения и варианты продолжения.',
+    'Найден общий фильм. Карточка совпадения уже готова, можно решить, что смотреть дальше.',
   WAITING:
     'Комната создана. Как только второй участник войдёт по ссылке, можно будет перейти к выбору фильмов.',
   WAITING_PARTNER_FILTERS:
@@ -146,7 +152,7 @@ const sessionId = computed(() => String(route.params.sessionId ?? ''))
 const activeSession = computed(() =>
   session.value?.sessionId === sessionId.value ? session.value : null,
 )
-const { loadSelectionState, resetRoomStage, roomStage } =
+const { loadSelectionState, resetRoomStage, roomStage, selectionState } =
   useRoomStage(activeSession)
 const { error: realtimeError } = useRoomRealtime(sessionId, {
   onSelectionStateChanged: () => {
@@ -252,8 +258,10 @@ const handlePreferencesSaved = () => {
   void loadSelectionState()
 }
 
-const handleMatchFound = () => {
-  void loadSelectionState()
+const handleSelectionStateChanged = (
+  updatedSelectionState: SelectionStateResponse,
+) => {
+  selectionState.value = updatedSelectionState
 }
 
 const handleRestartRequested = async () => {
