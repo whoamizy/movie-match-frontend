@@ -35,14 +35,14 @@
           <!-- eslint-disable vue/html-self-closing -->
           <img
             v-if="currentMovie.posterUrl"
-            class="border border-border rounded-md w-full aspect-[2/3] block object-cover"
+            class="border border-border rounded-md w-full block object-cover movie-poster-frame"
             :src="currentMovie.posterUrl"
             :alt="`Постер фильма ${currentMovie.title}`"
           />
           <!-- eslint-enable vue/html-self-closing -->
           <div
             v-else
-            class="text-sm text-muted-foreground px-6 text-center border border-border rounded-md bg-muted flex w-full aspect-[2/3] items-center justify-center"
+            class="text-sm text-muted-foreground px-6 text-center border border-border rounded-md bg-muted flex w-full items-center justify-center movie-poster-frame"
           >
             Постер недоступен
           </div>
@@ -104,7 +104,7 @@
       <div class="flex gap-3 justify-center">
         <UiButton
           type="button"
-          class="p-0 h-12 w-12"
+          class="p-0 h-12 w-12 !text-choice-dislike-foreground !bg-choice-dislike hover:!bg-choice-dislike-hover"
           aria-label="Дизлайк"
           :aria-busy="isSubmittingSwipe"
           :disabled="isSubmittingSwipe"
@@ -114,7 +114,7 @@
         </UiButton>
         <UiButton
           type="button"
-          class="p-0 h-12 w-12"
+          class="p-0 h-12 w-12 !text-choice-like-foreground !bg-choice-like hover:!bg-choice-like-hover"
           aria-label="Лайк"
           :aria-busy="isSubmittingSwipe"
           :disabled="isSubmittingSwipe"

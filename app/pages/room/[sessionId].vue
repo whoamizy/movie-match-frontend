@@ -14,7 +14,10 @@
             <h1 class="text-4xl heading sm:text-5xl">
               {{ pageTitle }}
             </h1>
-            <p class="text-sm text-muted-foreground max-w-xl sm:text-base">
+            <p
+              v-if="pageDescription"
+              class="text-sm text-muted-foreground max-w-xl sm:text-base"
+            >
               {{ pageDescription }}
             </p>
           </div>
@@ -136,7 +139,9 @@ const activeSession = computed(() =>
 const { loadSelectionState, resetRoomStage, roomStage } =
   useRoomStage(activeSession)
 const { error: realtimeError } = useRoomRealtime(sessionId, {
-  onSelectionStateChanged: loadSelectionState,
+  onSelectionStateChanged: () => {
+    void loadSelectionState()
+  },
 })
 const hasCheckedCurrentRoom = ref(Boolean(activeSession.value))
 
@@ -191,6 +196,10 @@ const pageDescription = computed(() => {
 
   if (isRoomUnavailable.value) {
     return 'Эта вкладка не связана с указанной комнатой. Открой актуальную ссылку приглашения или создай новую комнату.'
+  }
+
+  if (roomStage.value === 'CHOOSING') {
+    return ''
   }
 
   return roomStage.value

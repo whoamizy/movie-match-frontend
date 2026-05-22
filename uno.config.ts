@@ -13,6 +13,12 @@ export default defineConfig({
       'button-foreground': 'var(--color-button-foreground)',
       card: 'var(--color-card)',
       'card-foreground': 'var(--color-card-foreground)',
+      'choice-dislike': 'var(--color-choice-dislike)',
+      'choice-dislike-foreground': 'var(--color-choice-dislike-foreground)',
+      'choice-dislike-hover': 'var(--color-choice-dislike-hover)',
+      'choice-like': 'var(--color-choice-like)',
+      'choice-like-foreground': 'var(--color-choice-like-foreground)',
+      'choice-like-hover': 'var(--color-choice-like-hover)',
       foreground: 'var(--color-foreground)',
       heading: 'var(--color-heading)',
       muted: 'var(--color-muted)',
@@ -35,5 +41,6 @@ export default defineConfig({
     surface:
       'rounded-md border border-border bg-card px-6 py-8 sm:px-8 sm:py-10',
   },
+  rules: [['movie-poster-frame', { 'aspect-ratio': '2 / 3' }]],
   transformers: [transformerDirectives()],
 })
