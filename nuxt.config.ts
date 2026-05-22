@@ -7,6 +7,12 @@ const realtimeBase =
 export default defineNuxtConfig({
   compatibilityDate: '2026-05-14',
   devtools: { enabled: true },
+  app: {
+    pageTransition: {
+      mode: 'out-in',
+      name: 'page',
+    },
+  },
   ssr: false,
   experimental: {
     viteEnvironmentApi: true,
