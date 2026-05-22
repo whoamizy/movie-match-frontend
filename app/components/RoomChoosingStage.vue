@@ -1,18 +1,9 @@
 <template>
   <section
-    class="p-5 border border-accent/45 rounded-md bg-accent/10 flex flex-col gap-3"
+    class="p-3 border border-border rounded-md bg-secondary flex flex-col gap-4 w-full sm:p-4"
     role="status"
     aria-live="polite"
   >
-    <UiBadge variant="success" size="sm"> выбор фильма </UiBadge>
-    <div class="flex flex-col gap-2">
-      <h2 class="text-2xl heading">Следующий фильм</h2>
-      <p class="text-sm text-foreground">
-        Фильтры обоих участников сохранены. Backend готовит общую колоду и
-        отдаёт карточку для текущего участника.
-      </p>
-    </div>
-
     <UiLoader v-if="isLoadingMovie" label="Готовим следующий фильм..." />
 
     <div
@@ -36,27 +27,100 @@
       настройками.
     </p>
 
-    <div v-else class="flex flex-col gap-3">
-      <pre
-        class="text-xs text-foreground m-0 p-4 border border-border rounded-md bg-muted max-h-96 whitespace-pre-wrap break-words overflow-auto"
-        v-text="movieResponse"
-      />
-      <div class="gap-2 grid sm:grid-cols-2">
+    <div v-else-if="currentMovie" class="flex flex-col gap-4 w-full">
+      <article
+        class="text-card-foreground px-4 py-5 border border-border rounded-md bg-card flex flex-col gap-4 w-full sm:px-6"
+      >
+        <div class="mx-auto max-w-xs w-full sm:max-w-sm">
+          <!-- eslint-disable vue/html-self-closing -->
+          <img
+            v-if="currentMovie.posterUrl"
+            class="border border-border rounded-md w-full block object-cover movie-poster-frame"
+            :src="currentMovie.posterUrl"
+            :alt="`Постер фильма ${currentMovie.title}`"
+          />
+          <!-- eslint-enable vue/html-self-closing -->
+          <div
+            v-else
+            class="text-sm text-muted-foreground px-6 text-center border border-border rounded-md bg-muted flex w-full items-center justify-center movie-poster-frame"
+          >
+            Постер недоступен
+          </div>
+        </div>
+
+        <div class="text-center flex flex-col gap-3">
+          <h3 class="text-2xl heading">
+            {{ currentMovie.title }}
+          </h3>
+          <UiButton
+            type="button"
+            class="mx-auto w-full sm:w-fit"
+            :aria-expanded="isDetailsShown"
+            @click="isDetailsShown = !isDetailsShown"
+          >
+            {{ isDetailsShown ? 'Скрыть' : 'Показать больше' }}
+          </UiButton>
+        </div>
+
+        <div
+          v-if="isDetailsShown"
+          class="pt-4 border-t border-border flex flex-col gap-4"
+        >
+          <p class="text-sm text-foreground">
+            {{ movieDescription }}
+          </p>
+
+          <dl class="text-sm gap-3 grid sm:grid-cols-2">
+            <div class="px-3 py-2 rounded-md bg-muted">
+              <dt class="text-muted-foreground">Рейтинг</dt>
+              <dd class="text-foreground font-medium">
+                {{ movieRating }}
+              </dd>
+            </div>
+            <div class="px-3 py-2 rounded-md bg-muted">
+              <dt class="text-muted-foreground">Год выпуска</dt>
+              <dd class="text-foreground font-medium">
+                {{ movieReleaseYear }}
+              </dd>
+            </div>
+          </dl>
+
+          <div class="flex flex-col gap-2">
+            <span class="text-sm text-muted-foreground">Жанры</span>
+            <ul v-if="currentMovie.genres.length" class="flex flex-wrap gap-2">
+              <li v-for="genre in currentMovie.genres" :key="genre">
+                <UiBadge variant="success" size="sm" :uppercase="false">
+                  {{ genre }}
+                </UiBadge>
+              </li>
+            </ul>
+            <span v-else class="text-sm text-foreground">
+              Жанры пока недоступны
+            </span>
+          </div>
+        </div>
+      </article>
+
+      <div class="flex gap-3 justify-center">
         <UiButton
           type="button"
-          :disabled="isSubmittingSwipe"
+          class="p-0 h-12 w-12 !text-choice-dislike-foreground !bg-choice-dislike hover:!bg-choice-dislike-hover"
+          aria-label="Дизлайк"
           :aria-busy="isSubmittingSwipe"
+          :disabled="isSubmittingSwipe"
           @click="submitSwipe('dislike')"
         >
-          Дизлайк
+          <UiIcon name="dislike" size="22" />
         </UiButton>
         <UiButton
           type="button"
-          :disabled="isSubmittingSwipe"
+          class="p-0 h-12 w-12 !text-choice-like-foreground !bg-choice-like hover:!bg-choice-like-hover"
+          aria-label="Лайк"
           :aria-busy="isSubmittingSwipe"
+          :disabled="isSubmittingSwipe"
           @click="submitSwipe('like')"
         >
-          Лайк
+          <UiIcon name="like" size="22" />
         </UiButton>
       </div>
       <p
@@ -87,13 +151,24 @@ const { $moviesApi, $swipesApi } = useNuxtApp()
 const currentMovie = ref<MovieCardResponse | null>(null)
 const error = ref<string | null>(null)
 const isExhausted = ref(false)
+const isDetailsShown = ref(false)
 const isLoadingMovie = ref(false)
 const isSubmittingSwipe = ref(false)
 const swipeError = ref<string | null>(null)
 let requestId = 0
 
-const movieResponse = computed(() =>
-  JSON.stringify(currentMovie.value, null, 2),
+const movieDescription = computed(
+  () => currentMovie.value?.description || 'Описание пока недоступно',
+)
+const movieRating = computed(() => {
+  const rating = currentMovie.value?.rating
+
+  return rating === null || rating === undefined
+    ? 'Рейтинг пока недоступен'
+    : rating
+})
+const movieReleaseYear = computed(
+  () => currentMovie.value?.releaseYear ?? 'Год выпуска пока недоступен',
 )
 
 const loadNextMovie = async () => {
@@ -106,6 +181,7 @@ const loadNextMovie = async () => {
   error.value = null
   swipeError.value = null
   isExhausted.value = false
+  isDetailsShown.value = false
   isLoadingMovie.value = true
 
   try {

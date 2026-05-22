@@ -18,6 +18,12 @@
   --color-card-foreground: #f3e8d6;
   --color-button: var(--color-primary);
   --color-button-foreground: var(--color-primary-foreground);
+  --color-choice-dislike: #d94747;
+  --color-choice-dislike-hover: #c63d3d;
+  --color-choice-dislike-foreground: #ffffff;
+  --color-choice-like: #45d483;
+  --color-choice-like-hover: #38c775;
+  --color-choice-like-foreground: #07120d;
 }
 
 .theme-light {
@@ -39,6 +45,12 @@
   --color-card-foreground: #18151a;
   --color-button: var(--color-primary);
   --color-button-foreground: var(--color-primary-foreground);
+  --color-choice-dislike: #c93f3f;
+  --color-choice-dislike-hover: #b93535;
+  --color-choice-dislike-foreground: #fff7ed;
+  --color-choice-like: #238f57;
+  --color-choice-like-hover: #1f7e4d;
+  --color-choice-like-foreground: #fff7ed;
 }
 
 html {
