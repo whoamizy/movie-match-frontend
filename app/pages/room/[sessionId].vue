@@ -70,8 +70,11 @@
           />
           <RoomChoosingStage
             v-else-if="roomStage === 'CHOOSING'"
+            :is-restarting="isCreating"
+            :restart-error="error"
             :session-id="activeSession.sessionId"
             @match-found="handleMatchFound"
+            @restart-requested="handleRestartRequested"
           />
           <RoomMatchedStage v-else-if="roomStage === 'MATCHED'" />
           <RoomFinishedStage
@@ -129,8 +132,15 @@ const STAGE_DESCRIPTIONS: Record<RoomStage, string> = {
 }
 
 const route = useRoute()
-const { error, isLoadingCurrent, loadCurrentRoom, saveInviteLink, session } =
-  useRoomSession()
+const {
+  error,
+  isCreating,
+  isLoadingCurrent,
+  loadCurrentRoom,
+  restartRoom,
+  saveInviteLink,
+  session,
+} = useRoomSession()
 
 const sessionId = computed(() => String(route.params.sessionId ?? ''))
 const activeSession = computed(() =>
@@ -244,6 +254,22 @@ const handlePreferencesSaved = () => {
 
 const handleMatchFound = () => {
   void loadSelectionState()
+}
+
+const handleRestartRequested = async () => {
+  if (isCreating.value) {
+    return
+  }
+
+  try {
+    const createdSession = await restartRoom(activeSession.value?.sessionId)
+
+    if (createdSession) {
+      await navigateTo(`/room/${createdSession.sessionId}`)
+    }
+  } catch {
+    // The composable exposes a user-facing error message.
+  }
 }
 
 watch(

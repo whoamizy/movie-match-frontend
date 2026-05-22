@@ -124,13 +124,40 @@
       </p>
     </div>
 
-    <p
+    <div
       v-else
-      class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10"
+      class="px-4 py-7 text-center border border-primary/35 rounded-md bg-muted flex flex-col gap-4 items-center sm:px-8"
     >
-      Общая подборка закончилась. Можно создать новую комнату и начать с другими
-      настройками.
-    </p>
+      <span
+        class="text-primary border border-primary/35 rounded-full bg-primary/10 flex h-14 w-14 items-center justify-center"
+        aria-hidden="true"
+      >
+        <UiIcon name="sad" size="30" />
+      </span>
+      <div class="flex flex-col gap-2">
+        <h2 class="text-xl heading">Фильмы закончились</h2>
+        <p class="text-sm text-muted-foreground max-w-md">
+          По этим настройкам больше ничего не нашлось. Начните заново и
+          попробуйте расширить фильтры, чтобы поймать больше вариантов.
+        </p>
+      </div>
+      <UiButton
+        type="button"
+        class="w-full sm:w-fit"
+        :aria-busy="isRestarting"
+        :disabled="isRestarting"
+        @click="emit('restartRequested')"
+      >
+        {{ isRestarting ? 'Создаём...' : 'Начать заново' }}
+      </UiButton>
+      <p
+        v-if="restartError"
+        class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10 w-full"
+        role="alert"
+      >
+        {{ restartError }}
+      </p>
+    </div>
   </section>
 </template>
 
@@ -140,11 +167,14 @@ import type { MovieCardResponse } from '~/services/api/movies'
 import type { SwipeDecision } from '~/services/api/swipes'
 
 const props = defineProps<{
+  isRestarting?: boolean
+  restartError?: string | null
   sessionId: string
 }>()
 
 const emit = defineEmits<{
   matchFound: []
+  restartRequested: []
 }>()
 
 const { $moviesApi, $swipesApi } = useNuxtApp()
