@@ -13,13 +13,7 @@
       </p>
     </div>
 
-    <div
-      v-if="isLoadingMovie"
-      class="p-3 border border-border rounded-md bg-muted"
-      aria-busy="true"
-    >
-      <div class="rounded-md bg-border/70 h-5 w-full animate-pulse" />
-    </div>
+    <UiLoader v-if="isLoadingMovie" label="Готовим следующий фильм..." />
 
     <div
       v-else-if="error"

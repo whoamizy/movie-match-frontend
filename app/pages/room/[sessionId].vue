@@ -20,17 +20,10 @@
           </div>
         </div>
 
-        <div
+        <UiLoader
           v-if="isRecoveringCurrentRoom"
-          class="p-4 border border-border rounded-md bg-secondary/55 flex flex-col gap-3"
-          aria-busy="true"
-          aria-live="polite"
-        >
-          <UiBadge variant="muted" size="sm"> восстановление </UiBadge>
-          <div class="p-3 border border-border rounded-md bg-muted">
-            <div class="rounded-md bg-border/70 h-5 w-full animate-pulse" />
-          </div>
-        </div>
+          label="Восстанавливаем комнату..."
+        />
 
         <div
           v-else-if="isRoomUnavailable"

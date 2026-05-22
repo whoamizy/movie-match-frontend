@@ -10,14 +10,7 @@
         <UiBadge variant="muted" size="sm"> Жанры </UiBadge>
       </div>
 
-      <div
-        v-if="isLoadingGenres"
-        class="p-3 border border-border rounded-md bg-muted"
-        aria-busy="true"
-        aria-live="polite"
-      >
-        <div class="rounded-md bg-border/70 h-10 w-full animate-pulse" />
-      </div>
+      <UiLoader v-if="isLoadingGenres" label="Загружаем жанры..." />
 
       <div
         v-else-if="genresError"
