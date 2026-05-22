@@ -14,7 +14,7 @@
           </div>
         </div>
 
-        <UiLoader v-if="isJoining" label="Подключаем к комнате..." />
+        <UiLoader v-if="isJoining" label="Открываем приглашение..." />
 
         <div
           v-else-if="error"
@@ -39,12 +39,12 @@ const { error, isJoining, joinRoom } = useRoomSession()
 
 const inviteCode = computed(() => String(route.params.inviteCode ?? ''))
 const pageTitle = computed(() =>
-  error.value ? 'Не удалось войти в комнату' : 'Подключаем к комнате',
+  error.value ? 'Не удалось войти в комнату' : 'Открываем приглашение',
 )
 const pageDescription = computed(() =>
   error.value
     ? 'Ссылка может быть неверной, устаревшей или комната уже заполнена.'
-    : 'Сохраняем участника и готовим общий экран для выбора фильма.',
+    : 'Готовим общий экран для выбора фильма.',
 )
 
 const connectByInvite = async () => {

@@ -1,5 +1,4 @@
 import type { AxiosInstance } from 'axios'
-import type { MovieCardResponse } from '~/services/api/movies'
 
 export type SwipeDecision = 'like' | 'dislike'
 
@@ -10,7 +9,6 @@ export interface CreateSwipePayload {
 
 export interface SwipeResponse {
   swipeId: string
-  matchedMovie: MovieCardResponse | null
 }
 
 export const createSwipesApi = (api: AxiosInstance) => ({

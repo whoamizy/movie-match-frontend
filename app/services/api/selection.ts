@@ -1,4 +1,5 @@
 import type { AxiosInstance } from 'axios'
+import type { MovieCardResponse } from '~/services/api/movies'
 import type { PreferencesResponse } from '~/services/api/preferences'
 
 export type RoomStage =
@@ -12,6 +13,7 @@ export type RoomStage =
 export interface SelectionStateResponse {
   stage: RoomStage
   preferences: PreferencesResponse | null
+  matchedMovie: MovieCardResponse | null
 }
 
 export const createSelectionApi = (api: AxiosInstance) => ({
