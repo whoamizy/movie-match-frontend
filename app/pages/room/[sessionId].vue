@@ -25,7 +25,7 @@
 
         <UiLoader
           v-if="isRecoveringCurrentRoom"
-          label="Восстанавливаем комнату..."
+          label="Возвращаем вас к выбору..."
         />
 
         <div
@@ -43,7 +43,7 @@
             :aria-busy="isLoadingCurrent"
             @click="retryLoadCurrentRoom"
           >
-            {{ isLoadingCurrent ? 'Проверяем сессию...' : 'Проверить ещё раз' }}
+            {{ isLoadingCurrent ? 'Проверяем...' : 'Проверить ещё раз' }}
           </UiButton>
         </div>
 
@@ -124,16 +124,15 @@ const STAGE_TITLES: Record<RoomStage, string> = {
   WAITING_PARTNER_FILTERS: 'Ждём фильтры партнёра',
 }
 const STAGE_DESCRIPTIONS: Record<RoomStage, string> = {
-  CHOOSING:
-    'Фильтры обоих участников сохранены. Backend собирает общую колоду и выдаёт следующую карточку.',
+  CHOOSING: 'Подборка готова. Оценивайте фильмы, чтобы найти общий вариант.',
   FILTERS:
-    'Оба участника подключены. Выбери любимые жанры, исключения, рейтинг и годы, чтобы подготовить общую подборку.',
-  FINISHED: 'Комната закрыта: оба участника вышли и не вернулись.',
+    'Выберите жанры, исключения, рейтинг и годы, чтобы настроить подборку под ваш вечер.',
+  FINISHED: 'Подбор завершён. Можно начать заново и собрать новую подборку.',
   MATCHED: '',
   WAITING:
-    'Комната создана. Как только второй участник войдёт по ссылке, можно будет перейти к выбору фильмов.',
+    'Приглашение готово. Отправьте ссылку, чтобы начать выбирать фильм вместе.',
   WAITING_PARTNER_FILTERS:
-    'Твои фильтры уже сохранены. Осталось дождаться настроек второго участника.',
+    'Настройки сохранены. Скоро можно будет перейти к выбору фильмов.',
 }
 
 const route = useRoute()
@@ -199,18 +198,18 @@ const pageTitle = computed(() => {
   }
 
   if (isRoomUnavailable.value) {
-    return 'Сессия комнаты недоступна'
+    return 'Комната недоступна'
   }
 
   return roomStage.value ? STAGE_TITLES[roomStage.value] : 'Проверяем комнату'
 })
 const pageDescription = computed(() => {
   if (isRecoveringCurrentRoom.value) {
-    return 'Проверяем cookie-сессию через backend и возвращаем состояние комнаты.'
+    return 'Пробуем вернуть вас к последнему выбору.'
   }
 
   if (isRoomUnavailable.value) {
-    return 'Эта вкладка не связана с указанной комнатой. Открой актуальную ссылку приглашения или создай новую комнату.'
+    return 'Откройте актуальную ссылку приглашения или создайте новую комнату.'
   }
 
   if (roomStage.value === 'CHOOSING') {
@@ -219,12 +218,12 @@ const pageDescription = computed(() => {
 
   return roomStage.value
     ? STAGE_DESCRIPTIONS[roomStage.value]
-    : 'Проверяем актуальное состояние комнаты.'
+    : 'Проверяем подборку.'
 })
 const roomUnavailableMessage = computed(
   () =>
     error.value ??
-    'Backend не подтвердил доступ к этой комнате для текущей cookie-сессии.',
+    'Не удалось открыть эту комнату. Попробуйте актуальную ссылку приглашения или начните заново.',
 )
 const inviteLink = computed(() => activeSession.value?.inviteLink ?? '')
 

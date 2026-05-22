@@ -1,3 +1,3 @@
 <template>
-  <UiLoader label="Ожидаем второго участника..." />
+  <UiLoader label="Готовим подборку..." />
 </template>

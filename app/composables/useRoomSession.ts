@@ -3,13 +3,13 @@ import type { SessionResponse } from '~/services/api/sessions'
 
 const INVITE_LINK_STORAGE_PREFIX = 'movie-match:invite-link:'
 const CREATE_ROOM_ERROR_MESSAGE =
-  'Не удалось создать комнату. Проверь, что backend запущен, и попробуй ещё раз.'
+  'Не удалось создать комнату. Проверь соединение и попробуй ещё раз.'
 const JOIN_ROOM_ERROR_MESSAGE =
-  'Не удалось подключиться к комнате. Проверь ссылку и попробуй ещё раз.'
+  'Не удалось открыть приглашение. Проверь ссылку и попробуй ещё раз.'
 const CURRENT_ROOM_ERROR_MESSAGE =
-  'Не удалось восстановить текущую комнату. Войди по ссылке приглашения ещё раз.'
+  'Не удалось вернуться к комнате. Открой ссылку приглашения ещё раз.'
 const LEAVE_ROOM_ERROR_MESSAGE =
-  'Не удалось выйти из сессии. Проверь соединение и попробуй ещё раз.'
+  'Не удалось завершить участие. Проверь соединение и попробуй ещё раз.'
 const READY_SESSION_STATUS = 'READY'
 const CLOSED_SESSION_STATUS = 'CLOSED'
 
