@@ -81,8 +81,8 @@ const handleCreateRoom = async () => {
 .room-action-enter-active,
 .room-action-leave-active {
   transition:
-    opacity 180ms ease,
-    transform 180ms ease;
+    opacity 160ms ease,
+    transform 160ms ease;
 }
 
 .room-action-enter-from,

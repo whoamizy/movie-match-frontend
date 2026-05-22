@@ -23,68 +23,78 @@
           </div>
         </div>
 
-        <UiLoader
-          v-if="isRecoveringCurrentRoom"
-          label="Возвращаем вас к выбору..."
-        />
+        <Transition name="stage" mode="out-in">
+          <UiLoader
+            v-if="isRecoveringCurrentRoom"
+            key="recovering"
+            label="Возвращаем вас к выбору..."
+          />
 
-        <div
-          v-else-if="isRoomUnavailable"
-          class="p-4 border border-primary/35 rounded-md bg-primary/10 flex flex-col gap-4"
-          role="alert"
-        >
-          <p class="text-sm text-primary">
-            {{ roomUnavailableMessage }}
-          </p>
-          <UiButton
-            type="button"
-            class="w-full sm:w-fit"
-            :disabled="isLoadingCurrent"
-            :aria-busy="isLoadingCurrent"
-            @click="retryLoadCurrentRoom"
-          >
-            {{ isLoadingCurrent ? 'Проверяем...' : 'Проверить ещё раз' }}
-          </UiButton>
-        </div>
-
-        <template v-else-if="activeSession && roomStage">
-          <p
-            v-if="realtimeError && roomStage === 'WAITING'"
-            class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10"
+          <div
+            v-else-if="isRoomUnavailable"
+            key="unavailable"
+            class="p-4 border border-primary/35 rounded-md bg-primary/10 flex flex-col gap-4"
             role="alert"
           >
-            {{ realtimeError }}
-          </p>
+            <p class="text-sm text-primary">
+              {{ roomUnavailableMessage }}
+            </p>
+            <UiButton
+              type="button"
+              class="w-full sm:w-fit"
+              :disabled="isLoadingCurrent"
+              :aria-busy="isLoadingCurrent"
+              @click="retryLoadCurrentRoom"
+            >
+              {{ isLoadingCurrent ? 'Проверяем...' : 'Проверить ещё раз' }}
+            </UiButton>
+          </div>
 
-          <RoomWaitingStage
-            v-if="roomStage === 'WAITING'"
-            :invite-link="inviteLink"
-          />
-          <RoomFiltersStage
-            v-else-if="roomStage === 'FILTERS'"
-            :session-id="activeSession.sessionId"
-            @preferences-saved="handlePreferencesSaved"
-          />
-          <RoomWaitingPartnerFiltersStage
-            v-else-if="roomStage === 'WAITING_PARTNER_FILTERS'"
-          />
-          <RoomChoosingStage
-            v-else-if="roomStage === 'CHOOSING'"
-            :is-restarting="isCreating"
-            :restart-error="error"
-            :session-id="activeSession.sessionId"
-            @restart-requested="handleRestartRequested"
-            @selection-state-changed="handleSelectionStateChanged"
-          />
-          <RoomMatchedStage
-            v-else-if="roomStage === 'MATCHED'"
-            :movie="selectionState?.matchedMovie ?? null"
-          />
-          <RoomFinishedStage
-            v-else-if="roomStage === 'FINISHED'"
-            @create-new-room="goHome"
-          />
-        </template>
+          <div
+            v-else-if="activeSession && roomStage"
+            :key="roomContentKey"
+            class="flex flex-col gap-6 sm:gap-8"
+          >
+            <Transition name="fade">
+              <p
+                v-if="realtimeError && roomStage === 'WAITING'"
+                class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10"
+                role="alert"
+              >
+                {{ realtimeError }}
+              </p>
+            </Transition>
+
+            <RoomWaitingStage
+              v-if="roomStage === 'WAITING'"
+              :invite-link="inviteLink"
+            />
+            <RoomFiltersStage
+              v-else-if="roomStage === 'FILTERS'"
+              :session-id="activeSession.sessionId"
+              @preferences-saved="handlePreferencesSaved"
+            />
+            <RoomWaitingPartnerFiltersStage
+              v-else-if="roomStage === 'WAITING_PARTNER_FILTERS'"
+            />
+            <RoomChoosingStage
+              v-else-if="roomStage === 'CHOOSING'"
+              :is-restarting="isCreating"
+              :restart-error="error"
+              :session-id="activeSession.sessionId"
+              @restart-requested="handleRestartRequested"
+              @selection-state-changed="handleSelectionStateChanged"
+            />
+            <RoomMatchedStage
+              v-else-if="roomStage === 'MATCHED'"
+              :movie="selectionState?.matchedMovie ?? null"
+            />
+            <RoomFinishedStage
+              v-else-if="roomStage === 'FINISHED'"
+              @create-new-room="goHome"
+            />
+          </div>
+        </Transition>
       </div>
     </section>
   </main>
@@ -226,6 +236,7 @@ const roomUnavailableMessage = computed(
     'Не удалось открыть эту комнату. Попробуйте актуальную ссылку приглашения или начните заново.',
 )
 const inviteLink = computed(() => activeSession.value?.inviteLink ?? '')
+const roomContentKey = computed(() => roomStage.value ?? 'room-pending')
 
 const ensureCurrentRoom = async () => {
   if (activeSession.value || isLoadingCurrent.value) {

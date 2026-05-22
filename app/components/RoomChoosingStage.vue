@@ -4,160 +4,181 @@
     role="status"
     aria-live="polite"
   >
-    <UiLoader v-if="isLoadingMovie" label="Готовим следующий фильм..." />
+    <Transition name="stage" mode="out-in">
+      <UiLoader
+        v-if="isLoadingMovie"
+        key="loading"
+        label="Готовим следующий фильм..."
+      />
 
-    <div
-      v-else-if="error"
-      class="p-4 border border-primary/35 rounded-md bg-primary/10 flex flex-col gap-3"
-      role="alert"
-    >
-      <p class="text-sm text-primary">
-        {{ error }}
-      </p>
-      <UiButton type="button" class="w-full sm:w-fit" @click="loadNextMovie">
-        Повторить запрос
-      </UiButton>
-    </div>
-
-    <div v-else-if="currentMovie" class="flex flex-col gap-4 w-full">
-      <article
-        class="text-card-foreground px-4 py-5 border border-border rounded-md bg-card flex flex-col gap-4 w-full sm:px-6"
+      <div
+        v-else-if="error"
+        key="error"
+        class="p-4 border border-primary/35 rounded-md bg-primary/10 flex flex-col gap-3"
+        role="alert"
       >
-        <div class="mx-auto max-w-xs w-full sm:max-w-sm">
-          <!-- eslint-disable vue/html-self-closing -->
-          <img
-            v-if="currentMovie.posterUrl"
-            class="border border-border rounded-md w-full block object-cover movie-poster-frame"
-            :src="currentMovie.posterUrl"
-            :alt="`Постер фильма ${currentMovie.title}`"
-          />
-          <!-- eslint-enable vue/html-self-closing -->
-          <div
-            v-else
-            class="text-sm text-muted-foreground px-6 text-center border border-border rounded-md bg-muted flex w-full items-center justify-center movie-poster-frame"
-          >
-            Постер недоступен
-          </div>
-        </div>
+        <p class="text-sm text-primary">
+          {{ error }}
+        </p>
+        <UiButton type="button" class="w-full sm:w-fit" @click="loadNextMovie">
+          Повторить запрос
+        </UiButton>
+      </div>
 
-        <div class="text-center flex flex-col gap-3">
-          <h3 class="text-2xl heading">
-            {{ currentMovie.title }}
-          </h3>
+      <div
+        v-else-if="currentMovie"
+        :key="`movie-${currentMovie.id}`"
+        class="flex flex-col gap-4 w-full"
+      >
+        <article
+          class="text-card-foreground px-4 py-5 border border-border rounded-md bg-card flex flex-col gap-4 w-full sm:px-6"
+        >
+          <div class="mx-auto max-w-xs w-full sm:max-w-sm">
+            <!-- eslint-disable vue/html-self-closing -->
+            <img
+              v-if="currentMovie.posterUrl"
+              class="border border-border rounded-md w-full block object-cover movie-poster-frame"
+              :src="currentMovie.posterUrl"
+              :alt="`Постер фильма ${currentMovie.title}`"
+            />
+            <!-- eslint-enable vue/html-self-closing -->
+            <div
+              v-else
+              class="text-sm text-muted-foreground px-6 text-center border border-border rounded-md bg-muted flex w-full items-center justify-center movie-poster-frame"
+            >
+              Постер недоступен
+            </div>
+          </div>
+
+          <div class="text-center flex flex-col gap-3">
+            <h3 class="text-2xl heading">
+              {{ currentMovie.title }}
+            </h3>
+            <UiButton
+              type="button"
+              class="mx-auto w-full sm:w-fit"
+              :aria-expanded="isDetailsShown"
+              @click="isDetailsShown = !isDetailsShown"
+            >
+              {{ isDetailsShown ? 'Скрыть' : 'Показать больше' }}
+            </UiButton>
+          </div>
+
+          <Transition name="fade">
+            <div
+              v-if="isDetailsShown"
+              class="pt-4 border-t border-border flex flex-col gap-4"
+            >
+              <p class="text-sm text-foreground">
+                {{ movieDescription }}
+              </p>
+
+              <dl class="text-sm gap-3 grid sm:grid-cols-2">
+                <div class="px-3 py-2 rounded-md bg-muted">
+                  <dt class="text-muted-foreground">Рейтинг</dt>
+                  <dd class="text-foreground font-medium">
+                    {{ movieRating }}
+                  </dd>
+                </div>
+                <div class="px-3 py-2 rounded-md bg-muted">
+                  <dt class="text-muted-foreground">Год выпуска</dt>
+                  <dd class="text-foreground font-medium">
+                    {{ movieReleaseYear }}
+                  </dd>
+                </div>
+              </dl>
+
+              <div class="flex flex-col gap-2">
+                <span class="text-sm text-muted-foreground">Жанры</span>
+                <ul
+                  v-if="currentMovie.genres.length"
+                  class="flex flex-wrap gap-2"
+                >
+                  <li v-for="genre in currentMovie.genres" :key="genre">
+                    <UiBadge variant="success" size="sm" :uppercase="false">
+                      {{ genre }}
+                    </UiBadge>
+                  </li>
+                </ul>
+                <span v-else class="text-sm text-foreground">
+                  Жанры пока недоступны
+                </span>
+              </div>
+            </div>
+          </Transition>
+        </article>
+
+        <div class="flex gap-3 justify-center">
           <UiButton
             type="button"
-            class="mx-auto w-full sm:w-fit"
-            :aria-expanded="isDetailsShown"
-            @click="isDetailsShown = !isDetailsShown"
+            class="p-0 h-12 w-12 !text-choice-dislike-foreground !bg-choice-dislike hover:!bg-choice-dislike-hover"
+            aria-label="Дизлайк"
+            :aria-busy="isSubmittingSwipe"
+            :disabled="isSubmittingSwipe"
+            @click="submitSwipe('dislike')"
           >
-            {{ isDetailsShown ? 'Скрыть' : 'Показать больше' }}
+            <UiIcon name="dislike" size="22" />
+          </UiButton>
+          <UiButton
+            type="button"
+            class="p-0 h-12 w-12 !text-choice-like-foreground !bg-choice-like hover:!bg-choice-like-hover"
+            aria-label="Лайк"
+            :aria-busy="isSubmittingSwipe"
+            :disabled="isSubmittingSwipe"
+            @click="submitSwipe('like')"
+          >
+            <UiIcon name="like" size="22" />
           </UiButton>
         </div>
-
-        <div
-          v-if="isDetailsShown"
-          class="pt-4 border-t border-border flex flex-col gap-4"
-        >
-          <p class="text-sm text-foreground">
-            {{ movieDescription }}
+        <Transition name="fade">
+          <p
+            v-if="swipeError"
+            class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10"
+            role="alert"
+          >
+            {{ swipeError }}
           </p>
+        </Transition>
+      </div>
 
-          <dl class="text-sm gap-3 grid sm:grid-cols-2">
-            <div class="px-3 py-2 rounded-md bg-muted">
-              <dt class="text-muted-foreground">Рейтинг</dt>
-              <dd class="text-foreground font-medium">
-                {{ movieRating }}
-              </dd>
-            </div>
-            <div class="px-3 py-2 rounded-md bg-muted">
-              <dt class="text-muted-foreground">Год выпуска</dt>
-              <dd class="text-foreground font-medium">
-                {{ movieReleaseYear }}
-              </dd>
-            </div>
-          </dl>
-
-          <div class="flex flex-col gap-2">
-            <span class="text-sm text-muted-foreground">Жанры</span>
-            <ul v-if="currentMovie.genres.length" class="flex flex-wrap gap-2">
-              <li v-for="genre in currentMovie.genres" :key="genre">
-                <UiBadge variant="success" size="sm" :uppercase="false">
-                  {{ genre }}
-                </UiBadge>
-              </li>
-            </ul>
-            <span v-else class="text-sm text-foreground">
-              Жанры пока недоступны
-            </span>
-          </div>
+      <div
+        v-else
+        key="empty"
+        class="px-4 py-7 text-center border border-primary/35 rounded-md bg-muted flex flex-col gap-4 items-center sm:px-8"
+      >
+        <span
+          class="text-primary border border-primary/35 rounded-full bg-primary/10 flex h-14 w-14 items-center justify-center"
+          aria-hidden="true"
+        >
+          <UiIcon name="sad" size="30" />
+        </span>
+        <div class="flex flex-col gap-2">
+          <h2 class="text-xl heading">Фильмы закончились</h2>
+          <p class="text-sm text-muted-foreground max-w-md">
+            По этим настройкам больше ничего не нашлось. Начните заново и
+            попробуйте расширить фильтры, чтобы поймать больше вариантов.
+          </p>
         </div>
-      </article>
-
-      <div class="flex gap-3 justify-center">
         <UiButton
           type="button"
-          class="p-0 h-12 w-12 !text-choice-dislike-foreground !bg-choice-dislike hover:!bg-choice-dislike-hover"
-          aria-label="Дизлайк"
-          :aria-busy="isSubmittingSwipe"
-          :disabled="isSubmittingSwipe"
-          @click="submitSwipe('dislike')"
+          class="w-full sm:w-fit"
+          :aria-busy="isRestarting"
+          :disabled="isRestarting"
+          @click="emit('restartRequested')"
         >
-          <UiIcon name="dislike" size="22" />
+          {{ isRestarting ? 'Создаём...' : 'Начать заново' }}
         </UiButton>
-        <UiButton
-          type="button"
-          class="p-0 h-12 w-12 !text-choice-like-foreground !bg-choice-like hover:!bg-choice-like-hover"
-          aria-label="Лайк"
-          :aria-busy="isSubmittingSwipe"
-          :disabled="isSubmittingSwipe"
-          @click="submitSwipe('like')"
-        >
-          <UiIcon name="like" size="22" />
-        </UiButton>
+        <Transition name="fade">
+          <p
+            v-if="restartError"
+            class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10 w-full"
+            role="alert"
+          >
+            {{ restartError }}
+          </p>
+        </Transition>
       </div>
-      <p
-        v-if="swipeError"
-        class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10"
-        role="alert"
-      >
-        {{ swipeError }}
-      </p>
-    </div>
-
-    <div
-      v-else
-      class="px-4 py-7 text-center border border-primary/35 rounded-md bg-muted flex flex-col gap-4 items-center sm:px-8"
-    >
-      <span
-        class="text-primary border border-primary/35 rounded-full bg-primary/10 flex h-14 w-14 items-center justify-center"
-        aria-hidden="true"
-      >
-        <UiIcon name="sad" size="30" />
-      </span>
-      <div class="flex flex-col gap-2">
-        <h2 class="text-xl heading">Фильмы закончились</h2>
-        <p class="text-sm text-muted-foreground max-w-md">
-          По этим настройкам больше ничего не нашлось. Начните заново и
-          попробуйте расширить фильтры, чтобы поймать больше вариантов.
-        </p>
-      </div>
-      <UiButton
-        type="button"
-        class="w-full sm:w-fit"
-        :aria-busy="isRestarting"
-        :disabled="isRestarting"
-        @click="emit('restartRequested')"
-      >
-        {{ isRestarting ? 'Создаём...' : 'Начать заново' }}
-      </UiButton>
-      <p
-        v-if="restartError"
-        class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10 w-full"
-        role="alert"
-      >
-        {{ restartError }}
-      </p>
-    </div>
+    </Transition>
   </section>
 </template>
 
