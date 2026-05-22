@@ -8,10 +8,6 @@
     >
       <div class="flex flex-col gap-1">
         <UiBadge variant="muted" size="sm"> Жанры </UiBadge>
-        <p class="text-sm text-muted-foreground">
-          Любимые жанры поднимут фильмы выше в общей подборке. Нежелательные
-          жанры не попадут в подборку комнаты.
-        </p>
       </div>
 
       <div
@@ -117,9 +113,6 @@
       >
         <div class="flex flex-col gap-1">
           <UiBadge variant="muted" size="sm"> Минимальная оценка </UiBadge>
-          <p class="text-sm text-muted-foreground">
-            Фильмы с оценкой выше этого значения получат приоритет в колоде.
-          </p>
         </div>
         <span
           class="text-sm text-primary leading-none font-bold px-3 py-2 text-center border border-primary/45 rounded-full bg-primary/10 min-w-13 w-fit"
@@ -145,10 +138,6 @@
     >
       <div class="flex flex-col gap-1">
         <UiBadge variant="muted" size="sm"> Годы выпуска </UiBadge>
-        <p class="text-sm text-muted-foreground">
-          Укажи самый ранний год выпуска с {{ MIN_RELEASE_YEAR }} по
-          {{ CURRENT_RELEASE_YEAR }}.
-        </p>
       </div>
 
       <label class="text-sm text-foreground flex flex-col gap-2 sm:max-w-64">
