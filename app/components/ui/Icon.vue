@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-type IconName = 'check' | 'close-session' | 'copy' | 'dislike' | 'like'
+type IconName = 'check' | 'close-session' | 'copy' | 'dislike' | 'like' | 'sad'
 
 const ICON_MODULES = import.meta.glob<string>('../../assets/icons/*.svg', {
   eager: true,

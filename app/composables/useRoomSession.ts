@@ -188,6 +188,20 @@ export const useRoomSession = () => {
     }
   }
 
+  const restartRoom = async (currentSessionId?: string) => {
+    error.value = null
+
+    if (currentSessionId && !hasLeftSession.value) {
+      try {
+        await leaveRoom(currentSessionId)
+      } catch {
+        // Restart should still create a fresh room if leaving the old one fails.
+      }
+    }
+
+    return createRoom()
+  }
+
   const updateSessionStatus = (status: string) => {
     if (!session.value || session.value.status === status) {
       return
@@ -214,6 +228,7 @@ export const useRoomSession = () => {
     leaveRoom,
     loadCurrentRoom,
     refreshCurrentRoom,
+    restartRoom,
     saveInviteLink,
     session,
     updateSessionStatus,
