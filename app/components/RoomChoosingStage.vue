@@ -88,12 +88,10 @@
           <div class="flex flex-col gap-2">
             <span class="text-sm text-muted-foreground">Жанры</span>
             <ul v-if="currentMovie.genres.length" class="flex flex-wrap gap-2">
-              <li
-                v-for="genre in currentMovie.genres"
-                :key="genre"
-                class="text-xs text-accent px-2.5 py-1 border border-accent/45 rounded-md bg-accent/10"
-              >
-                {{ genre }}
+              <li v-for="genre in currentMovie.genres" :key="genre">
+                <UiBadge variant="success" size="sm" :uppercase="false">
+                  {{ genre }}
+                </UiBadge>
               </li>
             </ul>
             <span v-else class="text-sm text-foreground">
