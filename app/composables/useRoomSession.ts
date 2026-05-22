@@ -16,10 +16,6 @@ const CLOSED_SESSION_STATUS = 'CLOSED'
 export const useRoomSession = () => {
   const { $sessionsApi } = useNuxtApp()
   const session = useState<SessionResponse | null>('room-session', () => null)
-  const participantsCount = useState<number | null>(
-    'room-participants-count',
-    () => null,
-  )
   const isCreating = useState('room-is-creating', () => false)
   const isJoining = useState('room-is-joining', () => false)
   const isLeaving = useState('room-is-leaving', () => false)
@@ -65,7 +61,6 @@ export const useRoomSession = () => {
 
   const applySession = (nextSession: SessionResponse) => {
     session.value = nextSession
-    participantsCount.value = nextSession.participantsCount
     hasLeftSession.value = false
     saveInviteLink(nextSession.sessionId, nextSession.inviteLink)
   }
@@ -136,7 +131,6 @@ export const useRoomSession = () => {
       const apiError = normalizeApiError(cause, CURRENT_ROOM_ERROR_MESSAGE)
 
       session.value = null
-      participantsCount.value = null
       error.value = apiError.message
       throw apiError
     } finally {
@@ -182,7 +176,6 @@ export const useRoomSession = () => {
       }
 
       hasLeftSession.value = true
-      participantsCount.value = result.participantsCount
 
       return session.value
     } catch (cause) {
@@ -206,10 +199,6 @@ export const useRoomSession = () => {
     }
   }
 
-  const updateParticipantsCount = (nextParticipantsCount: number) => {
-    participantsCount.value = nextParticipantsCount
-  }
-
   return {
     createRoom,
     error,
@@ -224,11 +213,9 @@ export const useRoomSession = () => {
     joinRoom,
     leaveRoom,
     loadCurrentRoom,
-    participantsCount,
     refreshCurrentRoom,
     saveInviteLink,
     session,
-    updateParticipantsCount,
     updateSessionStatus,
   }
 }

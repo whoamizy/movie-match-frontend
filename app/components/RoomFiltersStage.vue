@@ -8,20 +8,9 @@
     >
       <div class="flex flex-col gap-1">
         <UiBadge variant="muted" size="sm"> Жанры </UiBadge>
-        <p class="text-sm text-muted-foreground">
-          Выбери до {{ MAX_SELECTED_GENRES }} жанров, которые хочется видеть в
-          подборке.
-        </p>
       </div>
 
-      <div
-        v-if="isLoadingGenres"
-        class="p-3 border border-border rounded-md bg-muted"
-        aria-busy="true"
-        aria-live="polite"
-      >
-        <div class="rounded-md bg-border/70 h-10 w-full animate-pulse" />
-      </div>
+      <UiLoader v-if="isLoadingGenres" label="Загружаем жанры..." />
 
       <div
         v-else-if="genresError"
@@ -41,28 +30,71 @@
         </UiButton>
       </div>
 
-      <div
-        v-else
-        class="pb-2 flex gap-2 min-w-0 overflow-x-auto"
-        aria-label="Список жанров"
-      >
-        <UiChips
-          v-for="genre in genres"
-          :key="genre.id"
-          :selected="isGenreSelected(genre)"
-          :disabled="isGenreDisabled(genre)"
-          :value="genre.name"
-          @click="toggleGenre(genre)"
-        >
-          {{ genre.name }}
-        </UiChips>
+      <div v-else class="flex flex-col gap-4">
+        <div class="flex flex-col gap-2">
+          <div class="flex gap-3 items-center justify-between">
+            <span class="text-sm text-foreground font-medium">
+              Хочется видеть
+            </span>
+            <span class="text-xs text-muted-foreground">
+              {{ selectedGenres.length }}/{{ MAX_SELECTED_GENRES }}
+            </span>
+          </div>
+          <div
+            class="pb-2 flex gap-2 min-w-0 overflow-x-auto"
+            aria-label="Предпочитаемые жанры"
+          >
+            <UiChips
+              v-for="genre in genres"
+              :key="`preferred-${genre.id}`"
+              :selected="isPreferredGenreSelected(genre)"
+              :disabled="isPreferredGenreDisabled(genre)"
+              :value="genre.name"
+              @click="togglePreferredGenre(genre)"
+            >
+              {{ genre.name }}
+            </UiChips>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <div class="flex gap-3 items-center justify-between">
+            <span class="text-sm text-foreground font-medium">
+              Не показывать
+            </span>
+            <span class="text-xs text-muted-foreground">
+              {{ excludedGenres.length }}/{{ MAX_EXCLUDED_GENRES }}
+            </span>
+          </div>
+          <div
+            class="pb-2 flex gap-2 min-w-0 overflow-x-auto"
+            aria-label="Исключаемые жанры"
+          >
+            <UiChips
+              v-for="genre in genres"
+              :key="`excluded-${genre.id}`"
+              :selected="isExcludedGenreSelected(genre)"
+              :disabled="isExcludedGenreDisabled(genre)"
+              :value="genre.name"
+              @click="toggleExcludedGenre(genre)"
+            >
+              {{ genre.name }}
+            </UiChips>
+          </div>
+        </div>
       </div>
 
       <p
         v-if="selectedGenres.length >= MAX_SELECTED_GENRES"
         class="text-xs text-primary"
       >
-        Выбрано максимум жанров: {{ MAX_SELECTED_GENRES }}.
+        Выбрано максимум любимых жанров: {{ MAX_SELECTED_GENRES }}.
+      </p>
+      <p
+        v-if="excludedGenres.length >= MAX_EXCLUDED_GENRES"
+        class="text-xs text-primary"
+      >
+        Выбрано максимум исключений: {{ MAX_EXCLUDED_GENRES }}.
       </p>
     </section>
 
@@ -74,9 +106,6 @@
       >
         <div class="flex flex-col gap-1">
           <UiBadge variant="muted" size="sm"> Минимальная оценка </UiBadge>
-          <p class="text-sm text-muted-foreground">
-            Отсечём фильмы ниже выбранного рейтинга.
-          </p>
         </div>
         <span
           class="text-sm text-primary leading-none font-bold px-3 py-2 text-center border border-primary/45 rounded-full bg-primary/10 min-w-13 w-fit"
@@ -84,6 +113,7 @@
           {{ minRating.toFixed(1) }}
         </span>
       </div>
+      <!-- eslint-disable vue/html-self-closing -->
       <input
         v-model.number="minRating"
         class="accent-primary w-full cursor-pointer focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-4"
@@ -93,6 +123,7 @@
         step="0.5"
         aria-label="Минимальная оценка"
       />
+      <!-- eslint-enable vue/html-self-closing -->
     </section>
 
     <section
@@ -100,40 +131,25 @@
     >
       <div class="flex flex-col gap-1">
         <UiBadge variant="muted" size="sm"> Годы выпуска </UiBadge>
-        <p class="text-sm text-muted-foreground">
-          Укажи диапазон с {{ MIN_RELEASE_YEAR }} по {{ MAX_RELEASE_YEAR }} год.
-        </p>
       </div>
 
-      <div class="gap-3 grid grid-cols-1 sm:grid-cols-2">
-        <label class="text-sm text-foreground flex flex-col gap-2">
-          <span>От</span>
-          <UiInput
-            v-model="releaseYearFrom"
-            type="number"
-            inputmode="numeric"
-            numeric
-            :min="MIN_RELEASE_YEAR"
-            :invalid="isReleaseYearFromInvalid"
-            placeholder="1888"
-          />
-        </label>
-        <label class="text-sm text-foreground flex flex-col gap-2">
-          <span>До</span>
-          <UiInput
-            v-model="releaseYearTo"
-            type="number"
-            inputmode="numeric"
-            numeric
-            :max="MAX_RELEASE_YEAR"
-            :invalid="isReleaseYearToInvalid"
-            placeholder="2100"
-          />
-        </label>
-      </div>
+      <label class="text-sm text-foreground flex flex-col gap-2 sm:max-w-64">
+        <span>Показывать фильмы с года</span>
+        <UiInput
+          v-model="releaseYearFrom"
+          type="number"
+          inputmode="numeric"
+          numeric
+          :min="MIN_RELEASE_YEAR"
+          :max="CURRENT_RELEASE_YEAR"
+          :invalid="isReleaseYearErrorVisible"
+          required
+          placeholder="2000"
+        />
+      </label>
 
-      <p v-if="releaseYearsError" class="text-xs text-primary" role="alert">
-        {{ releaseYearsError }}
+      <p v-if="releaseYearError" class="text-xs text-primary" role="alert">
+        {{ releaseYearError }}
       </p>
     </section>
 
@@ -165,8 +181,9 @@ const GENRES_ERROR_MESSAGE =
 const PREFERENCES_ERROR_MESSAGE =
   'Не удалось сохранить фильтры. Проверь соединение и попробуй ещё раз.'
 const MAX_SELECTED_GENRES = 12
+const MAX_EXCLUDED_GENRES = 3
 const MIN_RELEASE_YEAR = 1888
-const MAX_RELEASE_YEAR = 2100
+const CURRENT_RELEASE_YEAR = new Date().getFullYear()
 const DEFAULT_MIN_RATING = 5
 
 const props = defineProps<{
@@ -180,9 +197,9 @@ const emit = defineEmits<{
 const { $moviesApi, $preferencesApi } = useNuxtApp()
 const genres = ref<MovieGenre[]>([])
 const selectedGenres = ref<MovieGenre[]>([])
+const excludedGenres = ref<MovieGenre[]>([])
 const minRating = ref(DEFAULT_MIN_RATING)
 const releaseYearFrom = ref('')
-const releaseYearTo = ref('')
 const isLoadingGenres = ref(false)
 const isSubmittingPreferences = ref(false)
 const genresError = ref<string | null>(null)
@@ -191,61 +208,36 @@ const preferencesError = ref<string | null>(null)
 const releaseYearFromNumber = computed(() =>
   parseReleaseYear(releaseYearFrom.value),
 )
-const releaseYearToNumber = computed(() =>
-  parseReleaseYear(releaseYearTo.value),
-)
 const isReleaseYearFromInvalid = computed(() => {
   if (releaseYearFrom.value.length === 0) {
-    return false
+    return true
   }
 
   const year = releaseYearFromNumber.value
 
-  return year === null || year < MIN_RELEASE_YEAR
+  return year === null || year < MIN_RELEASE_YEAR || year > CURRENT_RELEASE_YEAR
 })
-const isReleaseYearToInvalid = computed(() => {
-  if (releaseYearTo.value.length === 0) {
-    return false
-  }
-
-  const year = releaseYearToNumber.value
-
-  return year === null || year > MAX_RELEASE_YEAR
-})
-const areReleaseYearsValid = computed(() => {
-  const from = releaseYearFromNumber.value
-  const to = releaseYearToNumber.value
-
-  return (
-    from !== null &&
-    to !== null &&
-    from >= MIN_RELEASE_YEAR &&
-    to <= MAX_RELEASE_YEAR &&
-    from <= to
-  )
-})
-const releaseYearsError = computed(() => {
-  if (!releaseYearFrom.value && !releaseYearTo.value) {
+const isReleaseYearValid = computed(() => !isReleaseYearFromInvalid.value)
+const isReleaseYearErrorVisible = computed(
+  () => releaseYearFrom.value.length > 0 && isReleaseYearFromInvalid.value,
+)
+const releaseYearError = computed(() => {
+  if (!releaseYearFrom.value) {
     return ''
   }
 
-  const from = releaseYearFromNumber.value
-  const to = releaseYearToNumber.value
+  const year = releaseYearFromNumber.value
 
-  if (from === null || to === null) {
-    return 'Заполни оба года числами.'
+  if (year === null) {
+    return 'Укажи год числом.'
   }
 
-  if (from < MIN_RELEASE_YEAR) {
-    return `Год “от” должен быть не меньше ${MIN_RELEASE_YEAR}.`
+  if (year < MIN_RELEASE_YEAR) {
+    return `Год должен быть не меньше ${MIN_RELEASE_YEAR}.`
   }
 
-  if (to > MAX_RELEASE_YEAR) {
-    return `Год “до” должен быть не больше ${MAX_RELEASE_YEAR}.`
-  }
-
-  if (from > to) {
-    return 'Начальный год должен быть меньше или равен конечному.'
+  if (year > CURRENT_RELEASE_YEAR) {
+    return `Год не должен быть больше ${CURRENT_RELEASE_YEAR}.`
   }
 
   return ''
@@ -254,9 +246,18 @@ const canStartChoosing = computed(
   () =>
     selectedGenres.value.length > 0 &&
     selectedGenres.value.length <= MAX_SELECTED_GENRES &&
-    areReleaseYearsValid.value &&
+    excludedGenres.value.length <= MAX_EXCLUDED_GENRES &&
+    !hasGenreOverlap.value &&
+    isReleaseYearValid.value &&
     !genresError.value,
 )
+const hasGenreOverlap = computed(() => {
+  const preferredGenreIds = new Set(
+    selectedGenres.value.map((genre) => genre.id),
+  )
+
+  return excludedGenres.value.some((genre) => preferredGenreIds.has(genre.id))
+})
 
 const parseReleaseYear = (value: string) => {
   if (!/^\d+$/.test(value)) {
@@ -266,21 +267,33 @@ const parseReleaseYear = (value: string) => {
   return Number(value)
 }
 
-const isGenreSelected = (genre: MovieGenre) =>
-  selectedGenres.value.some((selectedGenre) => selectedGenre.id === genre.id)
+const hasGenre = (collection: MovieGenre[], genre: MovieGenre) =>
+  collection.some((selectedGenre) => selectedGenre.id === genre.id)
 
-const isGenreDisabled = (genre: MovieGenre) =>
+const removeGenre = (collection: MovieGenre[], genre: MovieGenre) =>
+  collection.filter((selectedGenre) => selectedGenre.id !== genre.id)
+
+const isPreferredGenreSelected = (genre: MovieGenre) =>
+  hasGenre(selectedGenres.value, genre)
+
+const isExcludedGenreSelected = (genre: MovieGenre) =>
+  hasGenre(excludedGenres.value, genre)
+
+const isPreferredGenreDisabled = (genre: MovieGenre) =>
   isSubmittingPreferences.value ||
   (selectedGenres.value.length >= MAX_SELECTED_GENRES &&
-    !isGenreSelected(genre))
+    !isPreferredGenreSelected(genre))
 
-const toggleGenre = (genre: MovieGenre) => {
+const isExcludedGenreDisabled = (genre: MovieGenre) =>
+  isSubmittingPreferences.value ||
+  (excludedGenres.value.length >= MAX_EXCLUDED_GENRES &&
+    !isExcludedGenreSelected(genre))
+
+const togglePreferredGenre = (genre: MovieGenre) => {
   preferencesError.value = null
 
-  if (isGenreSelected(genre)) {
-    selectedGenres.value = selectedGenres.value.filter(
-      (selectedGenre) => selectedGenre.id !== genre.id,
-    )
+  if (isPreferredGenreSelected(genre)) {
+    selectedGenres.value = removeGenre(selectedGenres.value, genre)
     return
   }
 
@@ -288,7 +301,24 @@ const toggleGenre = (genre: MovieGenre) => {
     return
   }
 
+  excludedGenres.value = removeGenre(excludedGenres.value, genre)
   selectedGenres.value = [...selectedGenres.value, genre]
+}
+
+const toggleExcludedGenre = (genre: MovieGenre) => {
+  preferencesError.value = null
+
+  if (isExcludedGenreSelected(genre)) {
+    excludedGenres.value = removeGenre(excludedGenres.value, genre)
+    return
+  }
+
+  if (excludedGenres.value.length >= MAX_EXCLUDED_GENRES) {
+    return
+  }
+
+  selectedGenres.value = removeGenre(selectedGenres.value, genre)
+  excludedGenres.value = [...excludedGenres.value, genre]
 }
 
 const loadGenres = async () => {
@@ -317,15 +347,21 @@ const submitPreferences = async () => {
     return
   }
 
+  const releaseYear = releaseYearFromNumber.value
+
+  if (releaseYear === null) {
+    return
+  }
+
   isSubmittingPreferences.value = true
   preferencesError.value = null
 
   try {
     await $preferencesApi.updatePreferences(props.sessionId, {
       genreIds: selectedGenres.value.map((genre) => genre.id),
+      excludedGenreIds: excludedGenres.value.map((genre) => genre.id),
       minRating: minRating.value,
-      releaseYearFrom: releaseYearFromNumber.value ?? undefined,
-      releaseYearTo: releaseYearToNumber.value ?? undefined,
+      releaseYearFrom: releaseYear,
     })
 
     emit('preferencesSaved')
@@ -340,9 +376,9 @@ const submitPreferences = async () => {
 
 const resetPreferencesForm = () => {
   selectedGenres.value = []
+  excludedGenres.value = []
   minRating.value = DEFAULT_MIN_RATING
   releaseYearFrom.value = ''
-  releaseYearTo.value = ''
   preferencesError.value = null
 }
 

@@ -8,7 +8,7 @@
 const BADGE_VARIANTS = {
   accent: 'border-accent/45 bg-accent/10 text-accent',
   default: 'border-border bg-secondary/55 text-foreground',
-  muted: 'border-border bg-muted text-muted-foreground',
+  muted: 'border-border/90 bg-card/80 text-muted-foreground',
   primary: 'border-primary/40 bg-primary/10 text-primary',
   success: 'border-accent/45 bg-accent/10 text-accent',
   warning: 'border-primary/35 bg-primary/10 text-primary',

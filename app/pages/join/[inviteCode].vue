@@ -14,17 +14,7 @@
           </div>
         </div>
 
-        <div
-          v-if="isJoining"
-          class="p-4 border border-border rounded-md bg-secondary/55 flex flex-col gap-3"
-          aria-busy="true"
-          aria-live="polite"
-        >
-          <UiBadge variant="muted" size="sm"> подключение </UiBadge>
-          <div class="p-3 border border-border rounded-md bg-muted">
-            <div class="rounded-md bg-border/70 h-5 w-full animate-pulse" />
-          </div>
-        </div>
+        <UiLoader v-if="isJoining" label="Подключаем к комнате..." />
 
         <div
           v-else-if="error"

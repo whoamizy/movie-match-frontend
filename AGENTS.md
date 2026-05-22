@@ -58,7 +58,8 @@ Before finishing a task, run `npm run lint`. For TypeScript, composable, plugin,
 
 ## Browser verification workflow
 
-- When a task changes visible UI, verify the result in the browser with the `browser-use` skill.
+- Do not run browser verification unless the user explicitly asks for it.
+- If the user explicitly asks for browser verification after a visible UI change, use the `browser-use` skill.
 - Use the browser to check layout, spacing, responsiveness, interaction states, and obvious visual regressions on at least one desktop and one mobile-sized viewport when practical.
 - Prefer a real browser check over guessing from code alone whenever alignment, overflow, or responsive behavior could be affected.
 - If the browser reveals a visual issue, fix the implementation and re-check before finishing.

@@ -2,17 +2,12 @@ import { io, type Socket } from 'socket.io-client'
 
 interface SessionUpdatedPayload {
   status: string
-  participantsCount: number
 }
 
-interface SessionStatePayload extends SessionUpdatedPayload {
-  participantsCount: number
-}
+type SessionStatePayload = SessionUpdatedPayload
 
 interface ParticipantChangedPayload {
-  participantId: string
   status: string
-  participantsCount: number
 }
 
 interface RoomRealtimeOptions {
@@ -28,12 +23,7 @@ export const useRoomRealtime = (
   options: RoomRealtimeOptions = {},
 ) => {
   const config = useRuntimeConfig()
-  const {
-    refreshCurrentRoom,
-    session,
-    updateParticipantsCount,
-    updateSessionStatus,
-  } = useRoomSession()
+  const { refreshCurrentRoom, session, updateSessionStatus } = useRoomSession()
   const isConnected = ref(false)
   const error = ref<string | null>(null)
   let socket: Socket | null = null
@@ -61,7 +51,6 @@ export const useRoomRealtime = (
   const markSessionClosed = () => {
     error.value = null
     updateSessionStatus(CLOSED_SESSION_STATUS)
-    updateParticipantsCount(0)
     disconnect()
   }
 
@@ -122,8 +111,6 @@ export const useRoomRealtime = (
     })
 
     socket.on('session:state', (payload: SessionStatePayload) => {
-      updateParticipantsCount(payload.participantsCount)
-
       if (payload.status === CLOSED_SESSION_STATUS) {
         markSessionClosed()
         return
@@ -133,8 +120,6 @@ export const useRoomRealtime = (
     })
 
     socket.on('session:updated', (payload: SessionUpdatedPayload) => {
-      updateParticipantsCount(payload.participantsCount)
-
       if (payload.status === CLOSED_SESSION_STATUS) {
         markSessionClosed()
         return
@@ -145,7 +130,6 @@ export const useRoomRealtime = (
 
     socket.on('session:ready', (payload?: SessionUpdatedPayload) => {
       updateSessionStatus(payload?.status ?? READY_SESSION_STATUS)
-      updateParticipantsCount(payload?.participantsCount ?? 2)
       syncSelectionState()
     })
 
@@ -156,18 +140,21 @@ export const useRoomRealtime = (
     socket.on('participant:joined', (payload: ParticipantChangedPayload) => {
       error.value = null
       updateSessionStatus(payload.status)
-      updateParticipantsCount(payload.participantsCount)
     })
 
     socket.on('participant:left', (payload: ParticipantChangedPayload) => {
       updateSessionStatus(payload.status)
-      updateParticipantsCount(payload.participantsCount)
       revalidateCurrentRoom()
     })
 
     socket.on('preferences:updated', syncSelectionState)
 
     socket.on('selection:ready', syncSelectionState)
+
+    socket.on('match:created', () => {
+      error.value = null
+      syncSelectionState()
+    })
 
     socket.on('session:closed', markSessionClosed)
 

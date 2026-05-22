@@ -20,17 +20,10 @@
           </div>
         </div>
 
-        <div
+        <UiLoader
           v-if="isRecoveringCurrentRoom"
-          class="p-4 border border-border rounded-md bg-secondary/55 flex flex-col gap-3"
-          aria-busy="true"
-          aria-live="polite"
-        >
-          <UiBadge variant="muted" size="sm"> восстановление </UiBadge>
-          <div class="p-3 border border-border rounded-md bg-muted">
-            <div class="rounded-md bg-border/70 h-5 w-full animate-pulse" />
-          </div>
-        </div>
+          label="Восстанавливаем комнату..."
+        />
 
         <div
           v-else-if="isRoomUnavailable"
@@ -52,19 +45,6 @@
         </div>
 
         <template v-else-if="activeSession && roomStage">
-          <div
-            v-if="roomStage !== 'FINISHED'"
-            class="p-4 border border-accent/45 rounded-md bg-accent/10 flex flex-col gap-2"
-            aria-live="polite"
-          >
-            <UiBadge :variant="participantsBadgeVariant" size="sm">
-              участники в комнате{{ participantsLabel }}
-            </UiBadge>
-            <p class="text-sm text-foreground">
-              {{ participantsStatusMessage }}
-            </p>
-          </div>
-
           <p
             v-if="realtimeError && roomStage === 'WAITING'"
             class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10"
@@ -85,7 +65,11 @@
           <RoomWaitingPartnerFiltersStage
             v-else-if="roomStage === 'WAITING_PARTNER_FILTERS'"
           />
-          <RoomChoosingStage v-else-if="roomStage === 'CHOOSING'" />
+          <RoomChoosingStage
+            v-else-if="roomStage === 'CHOOSING'"
+            :session-id="activeSession.sessionId"
+            @match-found="handleMatchFound"
+          />
           <RoomMatchedStage v-else-if="roomStage === 'MATCHED'" />
           <RoomFinishedStage
             v-else-if="roomStage === 'FINISHED'"
@@ -129,9 +113,9 @@ const STAGE_TITLES: Record<RoomStage, string> = {
 }
 const STAGE_DESCRIPTIONS: Record<RoomStage, string> = {
   CHOOSING:
-    'Фильтры обоих участников сохранены. Комната готова к следующему шагу выбора фильма.',
+    'Фильтры обоих участников сохранены. Backend собирает общую колоду и выдаёт следующую карточку.',
   FILTERS:
-    'Оба участника подключены. Выбери жанры, рейтинг и годы выпуска, чтобы подготовить подборку.',
+    'Оба участника подключены. Выбери любимые жанры, исключения, рейтинг и годы, чтобы подготовить общую подборку.',
   FINISHED: 'Комната закрыта: оба участника вышли и не вернулись.',
   MATCHED:
     'Найден общий фильм. Следующий шаг покажет карточку совпадения и варианты продолжения.',
@@ -142,14 +126,8 @@ const STAGE_DESCRIPTIONS: Record<RoomStage, string> = {
 }
 
 const route = useRoute()
-const {
-  error,
-  isLoadingCurrent,
-  loadCurrentRoom,
-  participantsCount,
-  saveInviteLink,
-  session,
-} = useRoomSession()
+const { error, isLoadingCurrent, loadCurrentRoom, saveInviteLink, session } =
+  useRoomSession()
 
 const sessionId = computed(() => String(route.params.sessionId ?? ''))
 const activeSession = computed(() =>
@@ -225,37 +203,6 @@ const roomUnavailableMessage = computed(
     'Backend не подтвердил доступ к этой комнате для текущей cookie-сессии.',
 )
 const inviteLink = computed(() => activeSession.value?.inviteLink ?? '')
-const participantsLabel = computed(() => {
-  if (participantsCount.value === null) {
-    return ''
-  }
-
-  return ` · ${participantsCount.value}/2`
-})
-const participantsBadgeVariant = computed(() =>
-  roomStage.value === 'WAITING' || roomStage.value === 'WAITING_PARTNER_FILTERS'
-    ? 'accent'
-    : 'success',
-)
-const participantsStatusMessage = computed(() => {
-  if (roomStage.value === 'WAITING') {
-    return 'Ждём второго участника по ссылке приглашения.'
-  }
-
-  if (roomStage.value === 'FILTERS') {
-    return 'Комната собрана. Осталось настроить фильтры под общий вечер.'
-  }
-
-  if (roomStage.value === 'WAITING_PARTNER_FILTERS') {
-    return 'Твои фильтры сохранены. Ждём настройки второго участника.'
-  }
-
-  if (roomStage.value === 'MATCHED') {
-    return 'Оба участника выбрали один фильм.'
-  }
-
-  return 'Комната собрана. Можно продолжать подбор.'
-})
 
 const ensureCurrentRoom = async () => {
   if (activeSession.value || isLoadingCurrent.value) {
@@ -283,6 +230,10 @@ const goHome = async () => {
 }
 
 const handlePreferencesSaved = () => {
+  void loadSelectionState()
+}
+
+const handleMatchFound = () => {
   void loadSelectionState()
 }
 
