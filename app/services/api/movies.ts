@@ -22,6 +22,8 @@ export interface MovieCardResponse {
   genres: string[]
 }
 
+type NextMovieApiResponse = MovieCardResponse | null | ''
+
 export const createMoviesApi = (api: AxiosInstance) => ({
   async getGenres() {
     const response = await api.get<MovieGenresResponse>('/movies/genres')
@@ -30,11 +32,13 @@ export const createMoviesApi = (api: AxiosInstance) => ({
   },
 
   async getNextMovie(sessionId: string) {
-    const response = await api.get<MovieCardResponse | null>(
+    const response = await api.get<NextMovieApiResponse>(
       `/sessions/${encodeURIComponent(sessionId)}/movies/next`,
     )
 
-    return response.data
+    return response.status === 204 || response.data === ''
+      ? null
+      : response.data
   },
 })
 

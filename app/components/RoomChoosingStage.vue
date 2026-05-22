@@ -19,14 +19,6 @@
       </UiButton>
     </div>
 
-    <p
-      v-else-if="isExhausted"
-      class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10"
-    >
-      Общая подборка закончилась. Можно создать новую комнату и начать с другими
-      настройками.
-    </p>
-
     <div v-else-if="currentMovie" class="flex flex-col gap-4 w-full">
       <article
         class="text-card-foreground px-4 py-5 border border-border rounded-md bg-card flex flex-col gap-4 w-full sm:px-6"
@@ -131,6 +123,14 @@
         {{ swipeError }}
       </p>
     </div>
+
+    <p
+      v-else
+      class="text-sm text-primary px-4 py-3 border border-primary/35 rounded-md bg-primary/10"
+    >
+      Общая подборка закончилась. Можно создать новую комнату и начать с другими
+      настройками.
+    </p>
   </section>
 </template>
 
