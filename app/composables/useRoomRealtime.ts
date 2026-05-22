@@ -169,6 +169,11 @@ export const useRoomRealtime = (
 
     socket.on('selection:ready', syncSelectionState)
 
+    socket.on('match:created', () => {
+      error.value = null
+      syncSelectionState()
+    })
+
     socket.on('session:closed', markSessionClosed)
 
     socket.on('session:completed', () => {

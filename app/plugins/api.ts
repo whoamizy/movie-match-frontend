@@ -8,6 +8,8 @@ import type { SelectionApi } from '~/services/api/selection'
 import { createSelectionApi } from '~/services/api/selection'
 import type { SessionsApi } from '~/services/api/sessions'
 import { createSessionsApi } from '~/services/api/sessions'
+import type { SwipesApi } from '~/services/api/swipes'
+import { createSwipesApi } from '~/services/api/swipes'
 
 declare module '#app' {
   interface NuxtApp {
@@ -16,6 +18,7 @@ declare module '#app' {
     $preferencesApi: PreferencesApi
     $selectionApi: SelectionApi
     $sessionsApi: SessionsApi
+    $swipesApi: SwipesApi
   }
 }
 
@@ -26,6 +29,7 @@ declare module 'vue' {
     $preferencesApi: PreferencesApi
     $selectionApi: SelectionApi
     $sessionsApi: SessionsApi
+    $swipesApi: SwipesApi
   }
 }
 
@@ -47,6 +51,7 @@ export default defineNuxtPlugin(() => {
       preferencesApi: createPreferencesApi(api),
       selectionApi: createSelectionApi(api),
       sessionsApi: createSessionsApi(api),
+      swipesApi: createSwipesApi(api),
     },
   }
 })

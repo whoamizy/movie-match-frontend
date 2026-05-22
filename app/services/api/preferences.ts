@@ -2,9 +2,9 @@ import type { AxiosInstance } from 'axios'
 
 export interface UpdatePreferencesPayload {
   genreIds: number[]
+  excludedGenreIds?: number[]
   minRating?: number
   releaseYearFrom?: number
-  releaseYearTo?: number
 }
 
 export interface PreferencesResponse {
@@ -12,9 +12,9 @@ export interface PreferencesResponse {
   sessionId: string
   participantId: string
   genreIds: number[]
+  excludedGenreIds: number[]
   minRating: number | null
   releaseYearFrom: number | null
-  releaseYearTo: number | null
   createdAt: string
   updatedAt: string
 }

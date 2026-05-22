@@ -1,4 +1,5 @@
 <template>
+  <!-- eslint-disable vue/html-self-closing -->
   <input
     :value="modelValue"
     :type="type"
@@ -8,10 +9,12 @@
     :max="max"
     :min="min"
     :placeholder="placeholder"
+    :required="required"
     :aria-invalid="invalid"
     @input="handleInput"
     @keydown="handleKeydown"
   />
+  <!-- eslint-enable vue/html-self-closing -->
 </template>
 
 <script setup lang="ts">
@@ -32,6 +35,7 @@ const props = withDefaults(
     modelValue?: number | string
     numeric?: boolean
     placeholder?: string
+    required?: boolean
     type?: string
   }>(),
   {
@@ -43,6 +47,7 @@ const props = withDefaults(
     modelValue: '',
     numeric: false,
     placeholder: undefined,
+    required: false,
     type: 'text',
   },
 )

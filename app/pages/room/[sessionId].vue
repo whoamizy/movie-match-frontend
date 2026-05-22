@@ -88,6 +88,7 @@
           <RoomChoosingStage
             v-else-if="roomStage === 'CHOOSING'"
             :session-id="activeSession.sessionId"
+            @match-found="handleMatchFound"
           />
           <RoomMatchedStage v-else-if="roomStage === 'MATCHED'" />
           <RoomFinishedStage
@@ -132,9 +133,9 @@ const STAGE_TITLES: Record<RoomStage, string> = {
 }
 const STAGE_DESCRIPTIONS: Record<RoomStage, string> = {
   CHOOSING:
-    'Фильтры обоих участников сохранены. Комната готова к следующему шагу выбора фильма.',
+    'Фильтры обоих участников сохранены. Backend собирает общую колоду и выдаёт следующую карточку.',
   FILTERS:
-    'Оба участника подключены. Выбери жанры, рейтинг и годы выпуска, чтобы подготовить подборку.',
+    'Оба участника подключены. Выбери любимые жанры, исключения, рейтинг и годы, чтобы подготовить общую подборку.',
   FINISHED: 'Комната закрыта: оба участника вышли и не вернулись.',
   MATCHED:
     'Найден общий фильм. Следующий шаг покажет карточку совпадения и варианты продолжения.',
@@ -286,6 +287,10 @@ const goHome = async () => {
 }
 
 const handlePreferencesSaved = () => {
+  void loadSelectionState()
+}
+
+const handleMatchFound = () => {
   void loadSelectionState()
 }
 
