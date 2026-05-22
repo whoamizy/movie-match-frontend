@@ -152,7 +152,6 @@ const {
   isLoadingCurrent,
   loadCurrentRoom,
   restartRoom,
-  saveInviteLink,
   session,
 } = useRoomSession()
 
@@ -288,18 +287,6 @@ const handleRestartRequested = async () => {
     // The composable exposes a user-facing error message.
   }
 }
-
-watch(
-  () => activeSession.value?.inviteLink,
-  (activeInviteLink) => {
-    if (!activeInviteLink) {
-      return
-    }
-
-    saveInviteLink(sessionId.value, activeInviteLink)
-  },
-  { immediate: true },
-)
 
 watch(sessionId, () => {
   hasCheckedCurrentRoom.value = Boolean(activeSession.value)

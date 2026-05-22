@@ -6,7 +6,7 @@
 
 Stack: Nuxt 4, TypeScript, UnoCSS, and axios.
 
-The app currently runs as a client-side Nuxt app (`ssr: false`). Implemented flow: create a room, receive and store the participant token, persist the invite link as a local convenience, navigate to the room waiting page, and copy the invite link.
+The app currently runs as a client-side Nuxt app (`ssr: false`). Implemented flow: create a room, receive the participant cookie from the backend, navigate to the room waiting page, and copy the invite link.
 
 Planned MVP flow: join by invite, choose filters, rate movie cards with like/dislike actions, show match events, and display the final list.
 
@@ -17,8 +17,7 @@ Planned MVP flow: join by invite, choose filters, rate movie cards with like/dis
 - API service modules live in `app/services/api/*`; keep request payload and response types next to the service that owns them.
 - Backend errors should be normalized through `normalizeApiError` from `app/services/api/errors.ts` before reaching user-facing state.
 - Room/session state currently lives in `app/composables/useRoomSession.ts`.
-- Participant token handling belongs to the shared API plugin interceptor. Preserve that path when adding authenticated API calls.
-- `localStorage` invite-link persistence is a convenience for recovering the waiting page; do not make critical room/session behavior depend on it.
+- Participant authentication is cookie-based. Preserve `withCredentials: true` in the shared API plugin and realtime client when adding authenticated API calls; do not store participant tokens in frontend state or browser storage.
 
 ## Build and test commands
 

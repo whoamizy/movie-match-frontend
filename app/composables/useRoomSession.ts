@@ -1,7 +1,6 @@
 import { normalizeApiError } from '~/services/api/errors'
 import type { SessionResponse } from '~/services/api/sessions'
 
-const INVITE_LINK_STORAGE_PREFIX = 'movie-match:invite-link:'
 const CREATE_ROOM_ERROR_MESSAGE =
   'Не удалось создать комнату. Проверь соединение и попробуй ещё раз.'
 const JOIN_ROOM_ERROR_MESSAGE =
@@ -29,40 +28,9 @@ export const useRoomSession = () => {
     () => session.value?.status === CLOSED_SESSION_STATUS,
   )
 
-  const getInviteLinkStorageKey = (sessionId: string) =>
-    `${INVITE_LINK_STORAGE_PREFIX}${sessionId}`
-
-  const getStoredInviteLink = (sessionId: string) => {
-    if (!sessionId) {
-      return null
-    }
-
-    try {
-      return window.localStorage.getItem(getInviteLinkStorageKey(sessionId))
-    } catch {
-      return null
-    }
-  }
-
-  const saveInviteLink = (sessionId: string, inviteLink: string) => {
-    if (!sessionId || !inviteLink) {
-      return
-    }
-
-    try {
-      window.localStorage.setItem(
-        getInviteLinkStorageKey(sessionId),
-        inviteLink,
-      )
-    } catch {
-      // Persisting the invite link is a convenience; room creation should not fail.
-    }
-  }
-
   const applySession = (nextSession: SessionResponse) => {
     session.value = nextSession
     hasLeftSession.value = false
-    saveInviteLink(nextSession.sessionId, nextSession.inviteLink)
   }
 
   const createRoom = async () => {
@@ -216,7 +184,6 @@ export const useRoomSession = () => {
   return {
     createRoom,
     error,
-    getStoredInviteLink,
     hasLeftSession,
     isCreating,
     isJoining,
@@ -229,7 +196,6 @@ export const useRoomSession = () => {
     loadCurrentRoom,
     refreshCurrentRoom,
     restartRoom,
-    saveInviteLink,
     session,
     updateSessionStatus,
   }

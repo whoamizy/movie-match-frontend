@@ -11,6 +11,8 @@ import { createSessionsApi } from '~/services/api/sessions'
 import type { SwipesApi } from '~/services/api/swipes'
 import { createSwipesApi } from '~/services/api/swipes'
 
+const USE_COOKIE_CREDENTIALS = true
+
 declare module '#app' {
   interface NuxtApp {
     $api: AxiosInstance
@@ -37,7 +39,7 @@ export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
   const api = axios.create({
     baseURL: config.public.apiBase,
-    withCredentials: true,
+    withCredentials: USE_COOKIE_CREDENTIALS,
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
