@@ -8,7 +8,7 @@ export type RoomStage =
   | 'WAITING_PARTNER_FILTERS'
   | 'CHOOSING'
   | 'MATCHED'
-  | 'FINISHED'
+  | 'CLOSED'
 
 export interface SelectionStateResponse {
   stage: RoomStage

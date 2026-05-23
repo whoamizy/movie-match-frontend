@@ -1,5 +1,5 @@
 import { normalizeApiError } from '~/services/api/errors'
-import type { SessionResponse } from '~/services/api/sessions'
+import type { SessionResponse, SessionStatus } from '~/services/api/sessions'
 
 const CREATE_ROOM_ERROR_MESSAGE =
   'Не удалось создать комнату. Проверь соединение и попробуй ещё раз.'
@@ -170,7 +170,7 @@ export const useRoomSession = () => {
     return createRoom()
   }
 
-  const updateSessionStatus = (status: string) => {
+  const updateSessionStatus = (status: SessionStatus) => {
     if (!session.value || session.value.status === status) {
       return
     }

@@ -4,9 +4,7 @@ import type {
 } from '~/services/api/selection'
 import type { SessionResponse } from '~/services/api/sessions'
 
-const READY_SESSION_STATUS = 'READY'
 const WAITING_SESSION_STATUS = 'WAITING'
-const IN_PROGRESS_SESSION_STATUS = 'IN_PROGRESS'
 const COMPLETED_SESSION_STATUS = 'COMPLETED'
 const CLOSED_SESSION_STATUS = 'CLOSED'
 
@@ -24,11 +22,6 @@ export const useRoomStage = (
     return session ? `${session.sessionId}:${session.status}` : ''
   })
 
-  const isFinishedSession = (status: string) =>
-    status === COMPLETED_SESSION_STATUS || status === CLOSED_SESSION_STATUS
-  const isSelectionDrivenSession = (status: string) =>
-    status === READY_SESSION_STATUS || status === IN_PROGRESS_SESSION_STATUS
-
   const roomStage = computed<RoomStage | null>(() => {
     const session = normalizedSession.value
 
@@ -36,14 +29,21 @@ export const useRoomStage = (
       return null
     }
 
-    if (isFinishedSession(session.status)) {
-      return 'FINISHED'
+    if (session.status === COMPLETED_SESSION_STATUS) {
+      return (
+        selectionState.value?.stage ??
+        (isLoadingSelectionState.value ? null : 'MATCHED')
+      )
     }
 
-    if (
-      session.status === WAITING_SESSION_STATUS ||
-      !isSelectionDrivenSession(session.status)
-    ) {
+    if (session.status === CLOSED_SESSION_STATUS) {
+      return (
+        selectionState.value?.stage ??
+        (isLoadingSelectionState.value ? null : 'CLOSED')
+      )
+    }
+
+    if (session.status === WAITING_SESSION_STATUS) {
       return 'WAITING'
     }
 
@@ -77,15 +77,20 @@ export const useRoomStage = (
   watch(
     selectionSyncKey,
     (nextKey) => {
-      if (!nextKey) {
+      const nextSession = normalizedSession.value
+
+      if (!nextKey || !nextSession) {
         resetRoomStage()
         return
       }
 
       selectionState.value = null
-      void loadSelectionState()
+
+      if (nextSession.status !== WAITING_SESSION_STATUS) {
+        void loadSelectionState()
+      }
     },
-    { immediate: true },
+    { flush: 'sync', immediate: true },
   )
 
   return {

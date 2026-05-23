@@ -1,13 +1,16 @@
 import { io, type Socket } from 'socket.io-client'
+import type { SessionStatus } from '~/services/api/sessions'
 
 interface SessionUpdatedPayload {
-  status: string
+  status: SessionStatus
+  participantsCount: number
 }
 
 type SessionStatePayload = SessionUpdatedPayload
 
 interface ParticipantChangedPayload {
-  status: string
+  status: SessionStatus
+  participantsCount: number
 }
 
 interface RoomRealtimeOptions {
@@ -161,12 +164,7 @@ export const useRoomRealtime = (
     socket.on('session:completed', () => {
       error.value = null
       updateSessionStatus(COMPLETED_SESSION_STATUS)
-      revalidateCurrentRoom()
-    })
-
-    socket.on('final:selected', () => {
-      error.value = null
-      updateSessionStatus(COMPLETED_SESSION_STATUS)
+      syncSelectionState()
       revalidateCurrentRoom()
     })
   }

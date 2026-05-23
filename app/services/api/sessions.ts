@@ -1,5 +1,7 @@
 import type { AxiosInstance } from 'axios'
 
+export type SessionStatus = 'WAITING' | 'READY' | 'COMPLETED' | 'CLOSED'
+
 export interface SessionParticipantResponse {
   id: string
   isCreator: boolean
@@ -10,13 +12,13 @@ export interface SessionResponse {
   inviteCode: string
   inviteLink: string
   participantsCount: number
-  status: string
+  status: SessionStatus
   participant: SessionParticipantResponse
 }
 
 export interface LeaveSessionResponse {
   participantsCount: number
-  status: string
+  status: SessionStatus
 }
 
 export const createSessionsApi = (api: AxiosInstance) => ({
