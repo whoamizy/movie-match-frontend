@@ -1,4 +1,5 @@
 import { io, type Socket } from 'socket.io-client'
+import type { MovieCardResponse } from '~/services/api/movies'
 import type { SessionStatus } from '~/services/api/sessions'
 
 interface SessionUpdatedPayload {
@@ -14,12 +15,42 @@ interface ParticipantChangedPayload {
 }
 
 interface RoomRealtimeOptions {
+  // eslint-disable-next-line no-unused-vars
+  onMatchCreated?: (movie: MovieCardResponse) => void | Promise<void>
   onSelectionStateChanged?: () => void | Promise<void>
 }
 
 const READY_SESSION_STATUS = 'READY'
 const COMPLETED_SESSION_STATUS = 'COMPLETED'
 const CLOSED_SESSION_STATUS = 'CLOSED'
+
+const isMovieCardResponse = (
+  payload: unknown,
+): payload is MovieCardResponse => {
+  if (!payload || typeof payload !== 'object') {
+    return false
+  }
+
+  const movie = payload as Partial<MovieCardResponse>
+  const isNullableString = (value: unknown) =>
+    value === null || typeof value === 'string'
+  const isNullableNumber = (value: unknown) =>
+    value === null || typeof value === 'number'
+
+  return (
+    typeof movie.id === 'string' &&
+    typeof movie.poiskinoId === 'string' &&
+    typeof movie.title === 'string' &&
+    isNullableString(movie.originalTitle) &&
+    isNullableString(movie.description) &&
+    isNullableString(movie.posterUrl) &&
+    isNullableNumber(movie.rating) &&
+    isNullableNumber(movie.releaseYear) &&
+    isNullableNumber(movie.durationMinutes) &&
+    Array.isArray(movie.genres) &&
+    movie.genres.every((genre) => typeof genre === 'string')
+  )
+}
 
 export const useRoomRealtime = (
   sessionId: MaybeRefOrGetter<string>,
@@ -87,6 +118,20 @@ export const useRoomRealtime = (
     }, 150)
   }
 
+  const syncPartnerPreferences = (payload: unknown) => {
+    if (
+      !payload ||
+      typeof payload !== 'object' ||
+      !('participantId' in payload) ||
+      typeof payload.participantId !== 'string' ||
+      payload.participantId === session.value?.participant.id
+    ) {
+      return
+    }
+
+    syncSelectionState()
+  }
+
   const connect = () => {
     if (!import.meta.client || socket || !isActiveSession.value) {
       return
@@ -133,7 +178,6 @@ export const useRoomRealtime = (
 
     socket.on('session:ready', (payload?: SessionUpdatedPayload) => {
       updateSessionStatus(payload?.status ?? READY_SESSION_STATUS)
-      syncSelectionState()
     })
 
     socket.on('session:joined', () => {
@@ -150,13 +194,15 @@ export const useRoomRealtime = (
       revalidateCurrentRoom()
     })
 
-    socket.on('preferences:updated', syncSelectionState)
+    socket.on('preferences:updated', syncPartnerPreferences)
 
-    socket.on('selection:ready', syncSelectionState)
+    socket.on('match:created', (movie: unknown) => {
+      if (!isMovieCardResponse(movie)) {
+        return
+      }
 
-    socket.on('match:created', () => {
       error.value = null
-      syncSelectionState()
+      void options.onMatchCreated?.(movie)
     })
 
     socket.on('session:closed', markSessionClosed)
@@ -164,7 +210,6 @@ export const useRoomRealtime = (
     socket.on('session:completed', () => {
       error.value = null
       updateSessionStatus(COMPLETED_SESSION_STATUS)
-      syncSelectionState()
       revalidateCurrentRoom()
     })
   }

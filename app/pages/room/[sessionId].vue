@@ -82,8 +82,8 @@
               :is-restarting="isCreating"
               :restart-error="error"
               :session-id="activeSession.sessionId"
+              @match-created="applyMatchedMovie"
               @restart-requested="handleRestartRequested"
-              @selection-state-changed="handleSelectionStateChanged"
             />
             <RoomMatchedStage
               v-else-if="roomStage === 'MATCHED'"
@@ -101,10 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  RoomStage,
-  SelectionStateResponse,
-} from '~/services/api/selection'
+import type { RoomStage } from '~/services/api/selection'
 
 const STAGE_STATUS_LABELS: Record<RoomStage, string> = {
   CHOOSING: 'выбор',
@@ -160,6 +157,7 @@ const activeSession = computed(() =>
   session.value?.sessionId === sessionId.value ? session.value : null,
 )
 const {
+  applyMatchedMovie,
   isLoadingSelectionState,
   loadSelectionState,
   resetRoomStage,
@@ -167,6 +165,7 @@ const {
   selectionState,
 } = useRoomStage(activeSession)
 const { error: realtimeError } = useRoomRealtime(sessionId, {
+  onMatchCreated: applyMatchedMovie,
   onSelectionStateChanged: () => {
     void loadSelectionState()
   },
@@ -284,12 +283,6 @@ const goHome = async () => {
 
 const handlePreferencesSaved = () => {
   void loadSelectionState()
-}
-
-const handleSelectionStateChanged = (
-  updatedSelectionState: SelectionStateResponse,
-) => {
-  selectionState.value = updatedSelectionState
 }
 
 const handleRestartRequested = async () => {

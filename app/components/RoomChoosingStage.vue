@@ -185,7 +185,6 @@
 <script setup lang="ts">
 import { normalizeApiError } from '~/services/api/errors'
 import type { MovieCardResponse } from '~/services/api/movies'
-import type { SelectionStateResponse } from '~/services/api/selection'
 import type { SwipeDecision } from '~/services/api/swipes'
 
 const props = defineProps<{
@@ -195,11 +194,11 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  selectionStateChanged: [selectionState: SelectionStateResponse]
+  matchCreated: [movie: MovieCardResponse]
   restartRequested: []
 }>()
 
-const { $moviesApi, $selectionApi, $swipesApi } = useNuxtApp()
+const { $moviesApi, $swipesApi } = useNuxtApp()
 const currentMovie = ref<MovieCardResponse | null>(null)
 const error = ref<string | null>(null)
 const isExhausted = ref(false)
@@ -273,20 +272,19 @@ const submitSwipe = async (decision: SwipeDecision) => {
   isSubmittingSwipe.value = true
 
   try {
-    await $swipesApi.createSwipe(props.sessionId, {
+    const swipe = await $swipesApi.createSwipe(props.sessionId, {
       decision,
       movieId: movie.id,
     })
 
     currentMovie.value = null
-    const selectionState = await $selectionApi.getSelectionState(
-      props.sessionId,
-    )
-    emit('selectionStateChanged', selectionState)
 
-    if (selectionState.stage === 'CHOOSING') {
-      await loadNextMovie()
+    if (swipe.matchedMovie) {
+      emit('matchCreated', swipe.matchedMovie)
+      return
     }
+
+    await loadNextMovie()
   } catch (submitSwipeError) {
     swipeError.value = normalizeApiError(
       submitSwipeError,

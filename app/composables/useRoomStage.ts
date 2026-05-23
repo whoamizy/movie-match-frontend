@@ -1,3 +1,4 @@
+import type { MovieCardResponse } from '~/services/api/movies'
 import type {
   RoomStage,
   SelectionStateResponse,
@@ -14,6 +15,7 @@ export const useRoomStage = (
   const { $selectionApi } = useNuxtApp()
   const selectionState = ref<SelectionStateResponse | null>(null)
   const isLoadingSelectionState = ref(false)
+  let selectionRequestId = 0
 
   const normalizedSession = computed(() => toValue(activeSession))
   const selectionSyncKey = computed(() => {
@@ -58,19 +60,42 @@ export const useRoomStage = (
     }
 
     isLoadingSelectionState.value = true
+    const activeRequestId = selectionRequestId + 1
+    selectionRequestId = activeRequestId
 
     try {
-      selectionState.value = await $selectionApi.getSelectionState(sessionId)
+      const nextSelectionState =
+        await $selectionApi.getSelectionState(sessionId)
+
+      if (activeRequestId === selectionRequestId) {
+        selectionState.value = nextSelectionState
+      }
     } catch {
-      selectionState.value = null
+      if (activeRequestId === selectionRequestId) {
+        selectionState.value = null
+      }
     } finally {
-      isLoadingSelectionState.value = false
+      if (activeRequestId === selectionRequestId) {
+        isLoadingSelectionState.value = false
+      }
     }
 
     return selectionState.value
   }
 
+  const applyMatchedMovie = (matchedMovie: MovieCardResponse) => {
+    selectionRequestId += 1
+    isLoadingSelectionState.value = false
+    selectionState.value = {
+      matchedMovie,
+      preferences: selectionState.value?.preferences ?? null,
+      stage: 'MATCHED',
+    }
+  }
+
   const resetRoomStage = () => {
+    selectionRequestId += 1
+    isLoadingSelectionState.value = false
     selectionState.value = null
   }
 
@@ -84,7 +109,14 @@ export const useRoomStage = (
         return
       }
 
-      selectionState.value = null
+      if (
+        nextSession.status === COMPLETED_SESSION_STATUS &&
+        selectionState.value?.stage === 'MATCHED'
+      ) {
+        return
+      }
+
+      resetRoomStage()
 
       if (nextSession.status !== WAITING_SESSION_STATUS) {
         void loadSelectionState()
@@ -94,6 +126,7 @@ export const useRoomStage = (
   )
 
   return {
+    applyMatchedMovie,
     isLoadingSelectionState,
     loadSelectionState,
     resetRoomStage,
