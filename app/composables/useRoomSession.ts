@@ -42,7 +42,7 @@ export const useRoomSession = () => {
     error.value = null
 
     try {
-      const createdSession = await $sessionsApi.createSession({})
+      const createdSession = await $sessionsApi.createSession()
 
       applySession(createdSession)
 
@@ -66,7 +66,7 @@ export const useRoomSession = () => {
     error.value = null
 
     try {
-      const joinedSession = await $sessionsApi.joinSession(inviteCode, {})
+      const joinedSession = await $sessionsApi.joinSession(inviteCode)
 
       applySession(joinedSession)
 
