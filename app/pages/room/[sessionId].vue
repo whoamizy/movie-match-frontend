@@ -25,9 +25,9 @@
 
         <Transition name="stage" mode="out-in">
           <UiLoader
-            v-if="isRecoveringCurrentRoom"
+            v-if="isRecoveringCurrentRoom || isResolvingTerminalStage"
             key="recovering"
-            label="Возвращаем вас к выбору..."
+            :label="roomLoaderLabel"
           />
 
           <div
@@ -82,15 +82,15 @@
               :is-restarting="isCreating"
               :restart-error="error"
               :session-id="activeSession.sessionId"
+              @match-created="applyMatchedMovie"
               @restart-requested="handleRestartRequested"
-              @selection-state-changed="handleSelectionStateChanged"
             />
             <RoomMatchedStage
               v-else-if="roomStage === 'MATCHED'"
               :movie="selectionState?.matchedMovie ?? null"
             />
             <RoomFinishedStage
-              v-else-if="roomStage === 'FINISHED'"
+              v-else-if="roomStage === 'CLOSED'"
               @create-new-room="goHome"
             />
           </div>
@@ -101,15 +101,12 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  RoomStage,
-  SelectionStateResponse,
-} from '~/services/api/selection'
+import type { RoomStage } from '~/services/api/selection'
 
 const STAGE_STATUS_LABELS: Record<RoomStage, string> = {
   CHOOSING: 'выбор',
+  CLOSED: 'закрыто',
   FILTERS: 'фильтры',
-  FINISHED: 'завершено',
   MATCHED: 'совпадение',
   WAITING: 'ожидание',
   WAITING_PARTNER_FILTERS: 'ожидание фильтров',
@@ -119,25 +116,25 @@ const STAGE_BADGE_VARIANTS: Record<
   'accent' | 'muted' | 'success' | 'warning'
 > = {
   CHOOSING: 'success',
+  CLOSED: 'warning',
   FILTERS: 'success',
-  FINISHED: 'warning',
   MATCHED: 'success',
   WAITING: 'accent',
   WAITING_PARTNER_FILTERS: 'accent',
 }
 const STAGE_TITLES: Record<RoomStage, string> = {
   CHOOSING: 'Выбираем фильм',
+  CLOSED: 'Сессия закрыта',
   FILTERS: 'Настраиваем подборку',
-  FINISHED: 'Сессия завершена',
   MATCHED: 'Есть совпадение',
   WAITING: 'Ждём второго участника',
   WAITING_PARTNER_FILTERS: 'Ждём фильтры партнёра',
 }
 const STAGE_DESCRIPTIONS: Record<RoomStage, string> = {
   CHOOSING: 'Подборка готова. Оценивайте фильмы, чтобы найти общий вариант.',
+  CLOSED: 'Комната закрыта. Можно начать заново и собрать новую подборку.',
   FILTERS:
     'Выберите жанры, исключения, рейтинг и годы, чтобы настроить подборку под ваш вечер.',
-  FINISHED: 'Подбор завершён. Можно начать заново и собрать новую подборку.',
   MATCHED: '',
   WAITING:
     'Приглашение готово. Отправьте ссылку, чтобы начать выбирать фильм вместе.',
@@ -159,9 +156,16 @@ const sessionId = computed(() => String(route.params.sessionId ?? ''))
 const activeSession = computed(() =>
   session.value?.sessionId === sessionId.value ? session.value : null,
 )
-const { loadSelectionState, resetRoomStage, roomStage, selectionState } =
-  useRoomStage(activeSession)
+const {
+  applyMatchedMovie,
+  isLoadingSelectionState,
+  loadSelectionState,
+  resetRoomStage,
+  roomStage,
+  selectionState,
+} = useRoomStage(activeSession)
 const { error: realtimeError } = useRoomRealtime(sessionId, {
+  onMatchCreated: applyMatchedMovie,
   onSelectionStateChanged: () => {
     void loadSelectionState()
   },
@@ -179,6 +183,21 @@ const isRoomUnavailable = computed(
     !isLoadingCurrent.value &&
     !activeSession.value,
 )
+const isResolvingTerminalStage = computed(
+  () =>
+    Boolean(activeSession.value) &&
+    isLoadingSelectionState.value &&
+    roomStage.value === null,
+)
+const roomLoaderLabel = computed(() => {
+  if (!isResolvingTerminalStage.value) {
+    return 'Возвращаем вас к выбору...'
+  }
+
+  return activeSession.value?.status === 'COMPLETED'
+    ? 'Загружаем итоговый фильм...'
+    : 'Проверяем состояние комнаты...'
+})
 const statusLabel = computed(() => {
   if (isRecoveringCurrentRoom.value) {
     return 'проверка'
@@ -264,12 +283,6 @@ const goHome = async () => {
 
 const handlePreferencesSaved = () => {
   void loadSelectionState()
-}
-
-const handleSelectionStateChanged = (
-  updatedSelectionState: SelectionStateResponse,
-) => {
-  selectionState.value = updatedSelectionState
 }
 
 const handleRestartRequested = async () => {

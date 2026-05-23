@@ -8,7 +8,7 @@ Stack: Nuxt 4, TypeScript, UnoCSS, and axios.
 
 The app currently runs as a client-side Nuxt app (`ssr: false`). Implemented flow: create a room, receive the participant cookie from the backend, navigate to the room waiting page, and copy the invite link.
 
-Planned MVP flow: join by invite, choose filters, rate movie cards with like/dislike actions, show match events, and display the final list.
+Planned MVP flow: join by invite, choose filters, rate movie cards with like/dislike actions, show a match event, and display the single final movie.
 
 ## Architecture notes
 

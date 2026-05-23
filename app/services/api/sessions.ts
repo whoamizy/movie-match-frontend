@@ -1,9 +1,10 @@
 import type { AxiosInstance } from 'axios'
 
+export type SessionStatus = 'WAITING' | 'READY' | 'COMPLETED' | 'CLOSED'
+
 export interface SessionParticipantResponse {
   id: string
   isCreator: boolean
-  nickname: string | null
 }
 
 export interface SessionResponse {
@@ -11,32 +12,25 @@ export interface SessionResponse {
   inviteCode: string
   inviteLink: string
   participantsCount: number
-  status: string
+  status: SessionStatus
   participant: SessionParticipantResponse
 }
 
 export interface LeaveSessionResponse {
   participantsCount: number
-  status: string
+  status: SessionStatus
 }
-
-export interface CreateSessionPayload {
-  nickname?: string
-}
-
-export type JoinSessionPayload = CreateSessionPayload
 
 export const createSessionsApi = (api: AxiosInstance) => ({
-  async createSession(payload: CreateSessionPayload = {}) {
-    const response = await api.post<SessionResponse>('/sessions', payload)
+  async createSession() {
+    const response = await api.post<SessionResponse>('/sessions')
 
     return response.data
   },
 
-  async joinSession(inviteCode: string, payload: JoinSessionPayload = {}) {
+  async joinSession(inviteCode: string) {
     const response = await api.post<SessionResponse>(
       `/sessions/${encodeURIComponent(inviteCode)}/join`,
-      payload,
     )
 
     return response.data

@@ -1,12 +1,11 @@
+import type { MovieCardResponse } from '~/services/api/movies'
 import type {
   RoomStage,
   SelectionStateResponse,
 } from '~/services/api/selection'
 import type { SessionResponse } from '~/services/api/sessions'
 
-const READY_SESSION_STATUS = 'READY'
 const WAITING_SESSION_STATUS = 'WAITING'
-const IN_PROGRESS_SESSION_STATUS = 'IN_PROGRESS'
 const COMPLETED_SESSION_STATUS = 'COMPLETED'
 const CLOSED_SESSION_STATUS = 'CLOSED'
 
@@ -16,6 +15,7 @@ export const useRoomStage = (
   const { $selectionApi } = useNuxtApp()
   const selectionState = ref<SelectionStateResponse | null>(null)
   const isLoadingSelectionState = ref(false)
+  let selectionRequestId = 0
 
   const normalizedSession = computed(() => toValue(activeSession))
   const selectionSyncKey = computed(() => {
@@ -24,11 +24,6 @@ export const useRoomStage = (
     return session ? `${session.sessionId}:${session.status}` : ''
   })
 
-  const isFinishedSession = (status: string) =>
-    status === COMPLETED_SESSION_STATUS || status === CLOSED_SESSION_STATUS
-  const isSelectionDrivenSession = (status: string) =>
-    status === READY_SESSION_STATUS || status === IN_PROGRESS_SESSION_STATUS
-
   const roomStage = computed<RoomStage | null>(() => {
     const session = normalizedSession.value
 
@@ -36,14 +31,21 @@ export const useRoomStage = (
       return null
     }
 
-    if (isFinishedSession(session.status)) {
-      return 'FINISHED'
+    if (session.status === COMPLETED_SESSION_STATUS) {
+      return (
+        selectionState.value?.stage ??
+        (isLoadingSelectionState.value ? null : 'MATCHED')
+      )
     }
 
-    if (
-      session.status === WAITING_SESSION_STATUS ||
-      !isSelectionDrivenSession(session.status)
-    ) {
+    if (session.status === CLOSED_SESSION_STATUS) {
+      return (
+        selectionState.value?.stage ??
+        (isLoadingSelectionState.value ? null : 'CLOSED')
+      )
+    }
+
+    if (session.status === WAITING_SESSION_STATUS) {
       return 'WAITING'
     }
 
@@ -58,37 +60,73 @@ export const useRoomStage = (
     }
 
     isLoadingSelectionState.value = true
+    const activeRequestId = selectionRequestId + 1
+    selectionRequestId = activeRequestId
 
     try {
-      selectionState.value = await $selectionApi.getSelectionState(sessionId)
+      const nextSelectionState =
+        await $selectionApi.getSelectionState(sessionId)
+
+      if (activeRequestId === selectionRequestId) {
+        selectionState.value = nextSelectionState
+      }
     } catch {
-      selectionState.value = null
+      if (activeRequestId === selectionRequestId) {
+        selectionState.value = null
+      }
     } finally {
-      isLoadingSelectionState.value = false
+      if (activeRequestId === selectionRequestId) {
+        isLoadingSelectionState.value = false
+      }
     }
 
     return selectionState.value
   }
 
+  const applyMatchedMovie = (matchedMovie: MovieCardResponse) => {
+    selectionRequestId += 1
+    isLoadingSelectionState.value = false
+    selectionState.value = {
+      matchedMovie,
+      preferences: selectionState.value?.preferences ?? null,
+      stage: 'MATCHED',
+    }
+  }
+
   const resetRoomStage = () => {
+    selectionRequestId += 1
+    isLoadingSelectionState.value = false
     selectionState.value = null
   }
 
   watch(
     selectionSyncKey,
     (nextKey) => {
-      if (!nextKey) {
+      const nextSession = normalizedSession.value
+
+      if (!nextKey || !nextSession) {
         resetRoomStage()
         return
       }
 
-      selectionState.value = null
-      void loadSelectionState()
+      if (
+        nextSession.status === COMPLETED_SESSION_STATUS &&
+        selectionState.value?.stage === 'MATCHED'
+      ) {
+        return
+      }
+
+      resetRoomStage()
+
+      if (nextSession.status !== WAITING_SESSION_STATUS) {
+        void loadSelectionState()
+      }
     },
-    { immediate: true },
+    { flush: 'sync', immediate: true },
   )
 
   return {
+    applyMatchedMovie,
     isLoadingSelectionState,
     loadSelectionState,
     resetRoomStage,
