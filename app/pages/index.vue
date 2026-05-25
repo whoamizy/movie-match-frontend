@@ -57,6 +57,11 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: 'Главная',
+  titleTemplate: 'Movie Match | %s',
+})
+
 const isStartVisible = ref(false)
 const { createRoom, error, isCreating } = useRoomSession()
 

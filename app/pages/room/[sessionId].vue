@@ -248,6 +248,12 @@ const pageDescription = computed(() => {
     ? STAGE_DESCRIPTIONS[roomStage.value]
     : 'Проверяем подборку.'
 })
+
+useHead({
+  title: pageTitle,
+  titleTemplate: 'Movie Match | %s',
+})
+
 const roomUnavailableMessage = computed(
   () =>
     error.value ??
