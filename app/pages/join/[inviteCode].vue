@@ -47,6 +47,11 @@ const pageDescription = computed(() =>
     : 'Готовим общий экран для выбора фильма.',
 )
 
+useHead({
+  title: pageTitle,
+  titleTemplate: 'Movie Match | %s',
+})
+
 const connectByInvite = async () => {
   if (!inviteCode.value) {
     return

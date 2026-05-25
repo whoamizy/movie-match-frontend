@@ -8,6 +8,13 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-05-14',
   devtools: { enabled: true },
   app: {
+    head: {
+      title: 'Movie Match',
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+      ],
+    },
     pageTransition: {
       mode: 'out-in',
       name: 'page',
