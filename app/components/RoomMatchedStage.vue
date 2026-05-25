@@ -11,9 +11,9 @@
       <div class="mx-auto max-w-xs w-full sm:max-w-sm">
         <!-- eslint-disable vue/html-self-closing -->
         <img
-          v-if="movie.posterUrl"
+          v-if="moviePosterUrl"
           class="border border-border rounded-md w-full block object-cover movie-poster-frame"
-          :src="movie.posterUrl"
+          :src="moviePosterUrl"
           :alt="`Постер фильма ${movie.title}`"
         />
         <!-- eslint-enable vue/html-self-closing -->
@@ -82,11 +82,16 @@
 
 <script setup lang="ts">
 import type { MovieCardResponse } from '~/services/api/movies'
+import { buildMoviePosterUrl } from '~/utils/movie-poster'
 
 const props = defineProps<{
   movie: MovieCardResponse | null
 }>()
 
+const config = useRuntimeConfig()
+const moviePosterUrl = computed(() =>
+  buildMoviePosterUrl(String(config.public.apiBase), props.movie),
+)
 const movieDescription = computed(
   () => props.movie?.description || 'Описание пока недоступно',
 )

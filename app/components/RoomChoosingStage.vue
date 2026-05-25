@@ -36,9 +36,9 @@
           <div class="mx-auto max-w-xs w-full sm:max-w-sm">
             <!-- eslint-disable vue/html-self-closing -->
             <img
-              v-if="currentMovie.posterUrl"
+              v-if="moviePosterUrl"
               class="border border-border rounded-md w-full block object-cover movie-poster-frame"
-              :src="currentMovie.posterUrl"
+              :src="moviePosterUrl"
               :alt="`Постер фильма ${currentMovie.title}`"
             />
             <!-- eslint-enable vue/html-self-closing -->
@@ -186,6 +186,7 @@
 import { normalizeApiError } from '~/services/api/errors'
 import type { MovieCardResponse } from '~/services/api/movies'
 import type { SwipeDecision } from '~/services/api/swipes'
+import { buildMoviePosterUrl } from '~/utils/movie-poster'
 
 const props = defineProps<{
   isRestarting?: boolean
@@ -199,6 +200,7 @@ const emit = defineEmits<{
 }>()
 
 const { $moviesApi, $swipesApi } = useNuxtApp()
+const config = useRuntimeConfig()
 const currentMovie = ref<MovieCardResponse | null>(null)
 const error = ref<string | null>(null)
 const isExhausted = ref(false)
@@ -208,6 +210,9 @@ const isSubmittingSwipe = ref(false)
 const swipeError = ref<string | null>(null)
 let requestId = 0
 
+const moviePosterUrl = computed(() =>
+  buildMoviePosterUrl(String(config.public.apiBase), currentMovie.value),
+)
 const movieDescription = computed(
   () => currentMovie.value?.description || 'Описание пока недоступно',
 )
