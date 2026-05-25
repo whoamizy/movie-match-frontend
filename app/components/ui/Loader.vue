@@ -5,7 +5,7 @@
     aria-live="polite"
   >
     <span
-      class="border-2 border-border/70 border-t-accent rounded-full h-10 w-10 animate-spin"
+      class="ui-loader-spinner border-2 border-border/70 border-t-accent rounded-full h-10 w-10"
       aria-hidden="true"
     />
     <span class="text-sm leading-6">
@@ -24,3 +24,22 @@ withDefaults(
   },
 )
 </script>
+
+<style scoped>
+.ui-loader-spinner {
+  display: inline-block;
+  transform-origin: center center;
+  will-change: transform;
+  animation: ui-loader-spin 800ms linear infinite;
+}
+
+@keyframes ui-loader-spin {
+  from {
+    transform: translateZ(0) rotate(0deg);
+  }
+
+  to {
+    transform: translateZ(0) rotate(360deg);
+  }
+}
+</style>
