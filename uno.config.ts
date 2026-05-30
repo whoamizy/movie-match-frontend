@@ -32,8 +32,6 @@ export default defineConfig({
   },
   shortcuts: {
     body: 'text-body font-sans leading-relaxed',
-    button:
-      'inline-flex items-center justify-center rounded-md bg-button px-4 py-2 text-sm text-button-foreground font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
     container: 'mx-auto w-full max-w-3xl px-6 sm:px-8',
     heading:
       'text-heading font-sans font-semibold leading-none tracking-normal',

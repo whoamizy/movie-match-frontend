@@ -4,7 +4,7 @@
     role="status"
     aria-live="polite"
   >
-    <Transition name="stage" mode="out-in">
+    <Transition name="fade" mode="out-in">
       <UiLoader
         v-if="isLoadingMovie"
         key="loading"

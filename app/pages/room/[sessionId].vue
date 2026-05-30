@@ -23,7 +23,7 @@
           </div>
         </div>
 
-        <Transition name="stage" mode="out-in">
+        <Transition name="fade" mode="out-in">
           <UiLoader
             v-if="isRecoveringCurrentRoom || isResolvingTerminalStage"
             key="recovering"

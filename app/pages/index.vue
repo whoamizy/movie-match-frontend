@@ -15,7 +15,7 @@
 
         <UiButton v-if="!isStartVisible" @click="showStart"> Начать </UiButton>
 
-        <Transition name="room-action">
+        <Transition name="fade">
           <div
             v-if="isStartVisible"
             class="p-4 border border-border rounded-md bg-secondary/55 max-w-md w-full shadow-2xl"
@@ -81,18 +81,3 @@ const handleCreateRoom = async () => {
   }
 }
 </script>
-
-<style scoped>
-.room-action-enter-active,
-.room-action-leave-active {
-  transition:
-    opacity 160ms ease,
-    transform 160ms ease;
-}
-
-.room-action-enter-from,
-.room-action-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
-}
-</style>
