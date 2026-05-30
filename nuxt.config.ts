@@ -1,8 +1,7 @@
 const apiBase =
   process.env.NUXT_PUBLIC_API_BASE ?? 'http://localhost:4000/api/v1'
 const realtimeBase =
-  process.env.NUXT_PUBLIC_REALTIME_BASE ??
-  apiBase.replace(/\/api\/v\d+\/?$/, '')
+  process.env.NUXT_PUBLIC_REALTIME_BASE ?? 'http://localhost:4000'
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-05-14',
