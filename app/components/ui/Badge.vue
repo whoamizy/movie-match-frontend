@@ -33,21 +33,9 @@ const props = withDefaults(
 )
 
 const badgeClass = computed(() => [
-  'ui-badge rounded-full border font-medium leading-snug tracking-widest transition-colors',
+  'inline-block box-border max-w-full w-fit rounded-full border text-center font-medium leading-snug tracking-widest whitespace-normal break-anywhere transition-colors',
   BADGE_SIZES[props.size],
   BADGE_VARIANTS[props.variant],
   props.uppercase ? 'uppercase' : '',
 ])
 </script>
-
-<style scoped>
-.ui-badge {
-  box-sizing: border-box;
-  display: inline-block;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  text-align: center;
-  white-space: normal;
-  width: fit-content;
-}
-</style>
