@@ -16,7 +16,7 @@ export default defineNuxtConfig({
     },
     pageTransition: {
       mode: 'out-in',
-      name: 'page',
+      name: 'fade',
     },
   },
   ssr: false,
