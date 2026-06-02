@@ -65,19 +65,19 @@
               </p>
             </Transition>
 
-            <RoomWaitingStage
+            <LazyRoomWaitingStage
               v-if="roomStage === 'WAITING'"
               :invite-link="inviteLink"
             />
-            <RoomFiltersStage
+            <LazyRoomFiltersStage
               v-else-if="roomStage === 'FILTERS'"
               :session-id="activeSession.sessionId"
               @preferences-saved="handlePreferencesSaved"
             />
-            <RoomWaitingPartnerFiltersStage
+            <LazyRoomWaitingPartnerFiltersStage
               v-else-if="roomStage === 'WAITING_PARTNER_FILTERS'"
             />
-            <RoomChoosingStage
+            <LazyRoomChoosingStage
               v-else-if="roomStage === 'CHOOSING'"
               :is-restarting="isCreating"
               :restart-error="error"
@@ -85,11 +85,11 @@
               @match-created="applyMatchedMovie"
               @restart-requested="handleRestartRequested"
             />
-            <RoomMatchedStage
+            <LazyRoomMatchedStage
               v-else-if="roomStage === 'MATCHED'"
               :movie="selectionState?.matchedMovie ?? null"
             />
-            <RoomFinishedStage
+            <LazyRoomFinishedStage
               v-else-if="roomStage === 'CLOSED'"
               @create-new-room="goHome"
             />
